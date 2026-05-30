@@ -1,4 +1,4 @@
-# 🎨 Multi-modal Generation Agent
+# Project 5 - Build a Multi-modal Generation Agent
 
 <div align="center">
 
