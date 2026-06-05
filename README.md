@@ -12,7 +12,7 @@
 capable of Text-to-Image and Text-to-Video synthesis using
 state-of-the-art diffusion architectures.**
 > ### To better understand this project, first visit this link for a visualization of the project and what I built: [Link](https://multi-modal.space-z.ai/)
-> ### Then, if you want to learn each topic in a tutorial format, read this file thoroughly: [Link](https://github.com/AdilShamim8/Multi-Modal-105/blob/main/README.md)
+> ### Then, if you want to learn each topic in a tutorial format, read this file thoroughly: [Link](https://github.com/AdilShamim8/Multi-Modal-105/blob/main/Tutorial-105.md)
 
 
 [Overview](#-overview) •
