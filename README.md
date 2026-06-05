@@ -601,7 +601,7 @@ multimodal_agent/
 
 ---
 
-## 🔧 Installation
+## Installation
 
 ### System Requirements
 
@@ -617,7 +617,7 @@ multimodal_agent/
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/yourorg/multimodal-agent.git
+git clone https://github.com/AdilShamim8/Multi-Modal-105.git
 cd multimodal-agent
 ```
 
@@ -684,7 +684,7 @@ print('All OK!')
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### 1. Generate an Image (inference only)
 
@@ -797,7 +797,7 @@ print("Latent shape:", latents.shape)  # (1, 4, 64, 64)
 
 ---
 
-## 📊 Data Preparation
+## Data Preparation
 
 ### Image Data (T2I Training)
 
@@ -891,7 +891,7 @@ python -m data.video_dataset \
 
 ---
 
-## 🏋️ Training
+## Training
 
 ### Stage 1 — Train the VAE
 
@@ -1030,7 +1030,7 @@ accelerate launch \
 
 ---
 
-## 🎲 Sampling & Inference
+## Sampling & Inference
 
 ### Sampler Comparison
 
@@ -1098,7 +1098,7 @@ for i, img in enumerate(result["images"]):
 
 ---
 
-## 📐 Evaluation
+## Evaluation
 
 ### Running the Full Evaluation Suite
 
@@ -1176,7 +1176,7 @@ print(f"Diversity:  {results['eval/diversity']:.4f}")
 
 ---
 
-## 📚 API Reference
+## API Reference
 
 ### `MultimodalGenerationAgent`
 
@@ -1310,7 +1310,7 @@ out = model.forward_with_cfg(
 
 ---
 
-## 📊 Benchmarks
+## Benchmarks
 
 ### T2I Quality (512×512, 30 DPM-Solver++ steps)
 
@@ -1350,7 +1350,7 @@ out = model.forward_with_cfg(
 
 ---
 
-## ⚡ Large-Scale Training Challenges
+## Large-Scale Training Challenges
 
 This section documents the engineering solutions implemented for
 stable, efficient large-scale training. These are the challenges
@@ -1490,7 +1490,7 @@ dataset = wds.WebDataset(urls, resampled=True)
 
 ---
 
-## ⚙️ Configuration Reference
+## Configuration Reference
 
 ### Key Hyperparameters
 
@@ -1563,7 +1563,7 @@ sequence_parallelism: true
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 **Q: Can I use this for commercial purposes?**
 > This codebase is MIT licensed. However, ensure your training data
@@ -1631,7 +1631,7 @@ sequence_parallelism: true
 
 ---
 
-## 📖 Citation
+## Citation
 
 If you use this codebase in your research, please cite:
 
@@ -1705,7 +1705,7 @@ If you use this codebase in your research, please cite:
 
 ---
 
-## 📄 License
+##  License
 
 ```
 MIT License
