@@ -26,7 +26,7 @@ state-of-the-art diffusion architectures.**
 
 ---
 
-## 📑 Table of Contents
+## Table of Contents
 
 1. [Overview](#-overview)
 2. [Key Features](#-key-features)
@@ -55,7 +55,7 @@ state-of-the-art diffusion architectures.**
 
 ---
 
-## 🔭 Overview
+## Overview
 
 The **Multi-modal Generation Agent** is a fully production-ready,
 end-to-end deep learning system for generating images and videos
@@ -87,49 +87,49 @@ Extensibility→ Clean interfaces for adding new models, samplers, datasets
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### Model Capabilities
-- 🖼️  **Text-to-Image** generation at 512×512, 768×768, 1024×1024
-- 🎬  **Text-to-Video** generation (16/32/64 frames, up to 1024×1024)
-- ✏️  **Image-to-Image** editing via DDIM inversion
-- 🔀  **Classifier-Free Guidance (CFG)** for prompt adherence control
-- 🎭  **Multi-resolution bucket training** (SDXL-style)
+-   **Text-to-Image** generation at 512×512, 768×768, 1024×1024
+-   **Text-to-Video** generation (16/32/64 frames, up to 1024×1024)
+-   **Image-to-Image** editing via DDIM inversion
+-   **Classifier-Free Guidance (CFG)** for prompt adherence control
+-   **Multi-resolution bucket training** (SDXL-style)
 
 ### Architecture Implementations
-- 📐  **VAE** — KL-regularized autoencoder with perceptual + adversarial loss
-- 🎮  **StyleGAN2** — Full generator + discriminator with equalized LR, R1 penalty
-- 🔢  **VQ-VAE** — Vector quantization with EMA codebook updates
-- 🌊  **U-Net** — SD-style with cross-attention, scale-shift norm, Flash Attention
-- ⚡  **DiT** — Diffusion Transformer with adaLN-Zero, 2D sinusoidal pos embed
-- 🎥  **Video DiT** — Factorized spatial + temporal attention, causal 3D conv, 3D pos embed
+-   **VAE** — KL-regularized autoencoder with perceptual + adversarial loss
+-   **StyleGAN2** — Full generator + discriminator with equalized LR, R1 penalty
+-   **VQ-VAE** — Vector quantization with EMA codebook updates
+-   **U-Net** — SD-style with cross-attention, scale-shift norm, Flash Attention
+-   **DiT** — Diffusion Transformer with adaLN-Zero, 2D sinusoidal pos embed
+-   **Video DiT** — Factorized spatial + temporal attention, causal 3D conv, 3D pos embed
 
 ### Noise Schedulers & Samplers
-- 📅  **DDPM** — Full ancestral sampling (Ho et al. 2020)
-- 🚀  **DDIM** — Deterministic/stochastic with η control (Song et al. 2020)
-- ⚡  **DPM-Solver++** — 1st/2nd/3rd order, 10-20 step high-quality sampling (Lu et al. 2022)
-- 📊  **Schedules** — Linear, cosine, scaled-linear beta schedules
-- 🎯  **v-prediction** — Stable training objective (Salimans & Ho 2022)
+-   **DDPM** — Full ancestral sampling (Ho et al. 2020)
+-   **DDIM** — Deterministic/stochastic with η control (Song et al. 2020)
+-   **DPM-Solver++** — 1st/2nd/3rd order, 10-20 step high-quality sampling (Lu et al. 2022)
+-   **Schedules** — Linear, cosine, scaled-linear beta schedules
+-   **v-prediction** — Stable training objective (Salimans & Ho 2022)
 
 ### Training Infrastructure
-- 🔥  **Mixed Precision** — BF16/FP16 via HuggingFace Accelerate
-- 🌐  **Distributed Training** — DDP across 1–512 GPUs (NCCL backend)
-- 💾  **Gradient Checkpointing** — Up to 4× memory reduction
-- 📦  **Gradient Accumulation** — Effective batch scaling without extra memory
-- 🎯  **Min-SNR Weighting** — Improved training stability (Hang et al. 2023)
-- 👻  **EMA Model Tracking** — Shadow weights for higher-quality inference
-- 🛡️  **Loss Spike Detection** — Automatic bad batch skipping
-- 💿  **Latent Caching** — Pre-encode images/videos for 10× training throughput
+-   **Mixed Precision** — BF16/FP16 via HuggingFace Accelerate
+-   **Distributed Training** — DDP across 1–512 GPUs (NCCL backend)
+-   **Gradient Checkpointing** — Up to 4× memory reduction
+-   **Gradient Accumulation** — Effective batch scaling without extra memory
+-   **Min-SNR Weighting** — Improved training stability (Hang et al. 2023)
+-   **EMA Model Tracking** — Shadow weights for higher-quality inference
+-   **Loss Spike Detection** — Automatic bad batch skipping
+-   **Latent Caching** — Pre-encode images/videos for 10× training throughput
 
 ### Evaluation Suite
-- 📏  **FID** — Fréchet Inception Distance (image quality + diversity)
-- 🎯  **IS** — Inception Score (quality + class diversity)
-- 🔗  **CLIP Score** — Image-text alignment (Hessel et al. 2021)
-- 🌈  **Diversity** — Pairwise CLIP cosine distance metric
+-   **FID** — Fréchet Inception Distance (image quality + diversity)
+-   **IS** — Inception Score (quality + class diversity)
+-   **CLIP Score** — Image-text alignment (Hessel et al. 2021)
+-   **Diversity** — Pairwise CLIP cosine distance metric
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Generation Model Families
 
