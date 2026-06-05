@@ -32,7 +32,7 @@ We are going to understand:
 ## The Full Learning Map
 
 ```
-PART 1 (This Document)
+PART 1 
 │
 ├── 1. Overview of Image and Video Generation
 │   └── The big picture of how generation works
@@ -56,7 +56,7 @@ PART 1 (This Document)
 │   ├── Diffusion sampling
 │   └── Evaluation metrics (IS, FID, CLIP score)
 
-PART 2 (Next Document)
+PART 2 
 │
 ├── 7. Text-to-Video (T2V)
 │   ├── Latent Diffusion Modeling (LDM)
@@ -70,7 +70,7 @@ PART 2 (Next Document)
 
 ---
 
-# 📚 SECTION 1: Overview of Image and Video Generation
+# SECTION 1: Overview of Image and Video Generation
 
 ---
 
