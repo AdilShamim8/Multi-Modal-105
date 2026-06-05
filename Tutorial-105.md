@@ -1,4 +1,4 @@
-#  Project 5: Build a Multi-modal Generation Agent
+#  Complete Tutorial 5: Build a Multi-modal Generation Agent
 ## Complete Beginner Tutorial — Part 1 of 2
 
 ---
