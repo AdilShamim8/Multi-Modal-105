@@ -1,11 +1,11 @@
-# 🎬 Project 5: Build a Multi-modal Generation Agent
+#  Project 5: Build a Multi-modal Generation Agent
 ## Complete Beginner Tutorial — Part 1 of 2
 
 ---
 
-# 🗺️ What We Are Building and Why
+# What We Are Building and Why
 
-Before we touch any topic, let me paint the full picture for you.
+Before we touch on any topic, let me paint the full picture for you.
 
 ---
 
