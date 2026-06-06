@@ -74,7 +74,7 @@ PART 2
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think happens when AI generates an image?**
 
@@ -113,7 +113,7 @@ Now you ask them: *"Paint me a sunset over the ocean in the style of Van Gogh"*
 
 They do not find a painting like that and copy it.
 
-Instead their brain:
+Instead, their brain:
 1. **Remembers** what sunsets look like
 2. **Remembers** what Van Gogh's brushstrokes look like
 3. **Combines** these patterns creatively
@@ -152,11 +152,11 @@ We will learn ALL of them deeply. Let us start.
 
 ---
 
-# 📚 SECTION 2: VAE — Variational Autoencoder
+# SECTION 2: VAE — Variational Autoencoder
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think "encoding" an image means?**
 
@@ -463,11 +463,11 @@ MODERN USE OF VAE:
 
 ---
 
-# 📚 SECTION 3: GANs — Generative Adversarial Networks
+# SECTION 3: GANs — Generative Adversarial Networks
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think "adversarial" means in AI?**
 
@@ -762,11 +762,11 @@ GAN FAMILY TREE:
 
 ---
 
-# 📚 SECTION 4: Auto-regressive Models
+# SECTION 4: Auto-regressive Models
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think "auto-regressive" means?**
 
@@ -954,11 +954,11 @@ DALL-E 1 FLOW:
 
 ---
 
-# 📚 SECTION 5: Diffusion Models
+# SECTION 5: Diffusion Models
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think "diffusion" means in the context of AI?**
 
@@ -1284,11 +1284,11 @@ DIFFUSION MODEL HISTORY:
 
 ---
 
-# 📚 SECTION 6: Text-to-Image (T2I)
+# SECTION 6: Text-to-Image (T2I)
 
 ---
 
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What extra challenge does "Text-to-Image" add compared to just image generation?**
 
@@ -2207,7 +2207,7 @@ ADDITIONAL METRICS USED IN RESEARCH:
 
 ---
 
-# 🎯 Summary of Part 1
+# Summary of Part 1
 
 Let us review everything we learned in this first part:
 
@@ -2254,9 +2254,7 @@ PART 1 COMPLETE SUMMARY:
 
 ---
 
-# 🔔 Ready for Part 2?
-
-When you say **"START PART 2"**, I will cover:
+# Ready for Part 2?
 
 ```
 PART 2 WILL COVER:
@@ -2280,37 +2278,15 @@ PART 2 WILL COVER:
    └── Demo-ready project structure
 ```
 
----
-
-# 🎬 Project 5: Build a Multi-modal Generation Agent
 ## Complete Beginner Tutorial — Part 2 of 2
 
 ---
 
-# 🗺️ Quick Recap of Part 1
-
-Before we dive into Part 2, let us remember what we built in Part 1:
-
-```
-PART 1 COVERED:
-✅ VAE → Compress images to latent space
-✅ GANs → Two networks compete to create realistic images
-✅ Auto-regressive → Generate image token by token
-✅ Diffusion Models → Add noise then learn to remove it
-✅ Text-to-Image → Data prep, U-Net, DiT, CFG, LDM, Evaluation metrics
-
-NOW IN PART 2:
-→ Text-to-Video (the hardest and most exciting part)
-→ Building the complete Multi-modal Generation Agent
-```
+# SECTION 7: Text-to-Video (T2V)
 
 ---
 
-# 📚 SECTION 7: Text-to-Video (T2V)
-
----
-
-## 🤔 Prediction Before Explanation
+## Prediction Before Explanation
 
 **What do you think makes video generation harder than image generation?**
 
