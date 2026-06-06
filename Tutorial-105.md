@@ -3573,7 +3573,7 @@ SOLUTION 6: TENSOR PARALLELISM FOR INFERENCE
 
 ---
 
-# 📚 SECTION 8: Building the Multi-modal Generation Agent
+# SECTION 8: Building the Multi-modal Generation Agent
 
 Now we put everything together and build the actual project!
 
@@ -4982,7 +4982,7 @@ I would choose Flux or a DiT-based model."
 
 ---
 
-# 🎯 Complete Summary: Everything You Learned
+# Complete Summary: Everything You Learned
 
 ```
 COMPLETE COURSE SUMMARY:
@@ -5099,7 +5099,7 @@ Key Features:
 
 ---
 
-# 🚀 Next Steps for Your Project
+# Next Steps for Your Project
 
 ```
 WHAT TO DO NEXT:
@@ -5144,7 +5144,7 @@ PORTFOLIO:
 
 ---
 
-# 📚 Resources
+# Resources
 
 ```
 ESSENTIAL PAPERS TO READ:
@@ -5227,7 +5227,7 @@ Courses:
 
 ---
 
-# 🎓 Final Words
+# Final Words
 
 You have now learned everything from the most basic building blocks to building a complete, portfolio-ready Multi-modal Generation Agent.
 
@@ -5260,4 +5260,4 @@ END: "I can build and explain a full Multi-modal Generation System!" ✅
 - ✅ Present at demo day professionally
 - ✅ Iterate and improve based on feedback
 
-**Go build something amazing! 🚀🎨🎬**
+**Go build something amazing!**
