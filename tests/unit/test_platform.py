@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from multimodal.cli import _build_parser, main
 from multimodal.logging import (
@@ -101,7 +102,7 @@ class TestLoggingCorrelation:
 
 class TestSchemas:
     def test_video_frames_power_of_two(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError, match="power of two"):
             GenerationRequest(prompt="x", modality="video", num_frames=12)
 
     def test_image_defaults(self):

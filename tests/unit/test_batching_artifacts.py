@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from multimodal.exceptions import ArtifactError
 from multimodal.serving.artifacts import LocalArtifactStore
 from multimodal.serving.batching import BatchScheduler, batch_efficiency, signature
 from multimodal.serving.jobs import GenerationJob
@@ -107,7 +108,7 @@ class TestLocalArtifactStore:
         assert Path(path).read_bytes() == b"data"
 
     def test_path_traversal_blocked(self, store):
-        with pytest.raises(Exception):
+        with pytest.raises(ArtifactError, match="path traversal blocked"):
             store.resolve("../../etc/passwd")
 
     def test_healthy_when_writable(self, store):
