@@ -1,13 +1,15 @@
 from collections.abc import Callable
+from typing import TypeAlias
 
 import torch
 
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 #: Denoising models are invoked as ``model(x, t, **conditioning)``. Production
-#: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules — both
-#: satisfy this calling convention, so the sampler accepts either.
-Denoiser = Callable[..., torch.Tensor] | torch.nn.Module
+#: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules (whose
+#: __call__ satisfies this protocol) — the alias stays a valid type whether
+#: or not torch's stubs are installed in the checking environment.
+Denoiser: TypeAlias = Callable[..., "torch.Tensor"]
 
 
 class DDPMSampler:
