@@ -16,7 +16,6 @@ from multimodal.models.diffusion.dit import EMAModel
 from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 from multimodal.models.text_encoder import T5TextEncoder
-from multimodal.sampling.ddim_sampler import DDIMSampler
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
 
@@ -128,7 +127,7 @@ class LargeScaleT2VTrainer:
         self.epoch = 0
 
         # Loss tracking for spike detection
-        self._loss_ema = None
+        self._loss_ema: float | None = None
         self._loss_spike_threshold = 5.0
 
         # Pre-compute null text embeddings for CFG
@@ -182,9 +181,12 @@ class LargeScaleT2VTrainer:
 
     def _enable_gradient_checkpointing(self, model: nn.Module):
         """Enable gradient checkpointing on transformer blocks."""
-        if hasattr(model, "blocks"):
-            for block in model.blocks:
-                block.gradient_checkpointing = True
+        blocks = getattr(model, "blocks", None)
+        if blocks is not None:
+            for idx in range(len(blocks)):
+                # Dynamic flag consumed by VideoDiTBlock.forward (dit_video.py);
+                # not a declared attribute, hence the narrow ignore.
+                blocks[idx].gradient_checkpointing = True  # type: ignore[union-attr]
         logger.info("Gradient checkpointing enabled")
 
     def _build_optimizer(
@@ -391,11 +393,10 @@ class LargeScaleT2VTrainer:
         W_lat = cfg.frame_size // cfg.spatial_compression
         shape = (B, 16, T_lat, H_lat, W_lat)
 
-        # DDIM sampler adapted for video
-        sampler = DDIMSampler(self.scheduler)
+        # Manual deterministic DDIM loop for video (the generic samplers
+        # assume 4D image latents; the previous dead DDIMSampler instance and
+        # its set_timesteps monkey-patch never ran and are removed).
         latents = torch.randn(*shape, device=self.device)
-
-        sampler.set_timesteps = lambda n, d: None  # handled internally
 
         # Manual DDIM loop for video
         self.scheduler.set_timesteps(num_inference_steps, str(self.device))
@@ -426,7 +427,7 @@ class LargeScaleT2VTrainer:
                 if i < len(self.scheduler.timesteps) - 1
                 else torch.zeros(1, device=self.device)
             )
-            t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
+            t_prev_val = int(t_prev.item()) if hasattr(t_prev, "item") else int(t_prev)
 
             alpha_prev = self.scheduler.alphas_cumprod[t_prev_val].to(self.device)
 
@@ -446,7 +447,7 @@ class LargeScaleT2VTrainer:
         for b in range(B):
             frames = videos[b].permute(1, 2, 3, 0).cpu().numpy()  # (T, H, W, 3)
             out_path = str(sample_dir / f"step{self.global_step:07d}_sample{b}.gif")
-            imageio.mimwrite(out_path, frames, fps=fps)
+            imageio.mimwrite(out_path, list(frames), fps=fps)
             saved_paths.append(out_path)
 
         self.ema.restore(unwrapped)
