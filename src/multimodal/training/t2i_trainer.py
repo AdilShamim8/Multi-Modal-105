@@ -95,9 +95,13 @@ class T2ITrainer:
         # LR scheduler with warmup
         self.lr_scheduler = self._build_lr_scheduler(self.optimizer, config)
 
-        # Gradient checkpointing
-        if config.gradient_checkpointing and hasattr(model, "enable_gradient_checkpointing"):
-            model.enable_gradient_checkpointing()
+        # Gradient checkpointing. The attribute is dynamic (added by
+        # accelerate-wrapped models); hasattr cannot narrow Module's
+        # Tensor | Module attribute union, so resolve it via getattr + cast.
+        if config.gradient_checkpointing:
+            enable = getattr(model, "enable_gradient_checkpointing", None)
+            if callable(enable):
+                enable()
 
         # Accelerate prepare
         (
