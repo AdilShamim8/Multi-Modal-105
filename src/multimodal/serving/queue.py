@@ -16,7 +16,7 @@ to multiple downstream consumers ever appears.
 from __future__ import annotations
 
 import time
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import redis
 
@@ -161,12 +161,19 @@ class JobQueue:
         return f"mm:job:{job_id}"
 
 
-def connect_redis(url: str) -> redis.Redis:
-    """Connection factory with sane production timeouts."""
-    return redis.Redis.from_url(
+def connect_redis(url: str) -> RedisLike:
+    """Connection factory with sane production timeouts.
+
+    Returns the protocol type (not redis.Redis) so call sites typecheck
+    under both typing sources for redis: redis-py's inline annotations and
+    the types-redis stubs, whose method signatures differ in parameter
+    kinds. The cast documents that variance boundary in exactly one place.
+    """
+    client = redis.Redis.from_url(
         url,
         socket_connect_timeout=3,
         socket_timeout=5,
         health_check_interval=30,
         decode_responses=True,
     )
+    return cast(RedisLike, client)
