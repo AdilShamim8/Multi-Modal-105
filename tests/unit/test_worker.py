@@ -49,6 +49,7 @@ class TestPollOnce:
         engine = FakeEngine(config)
         worker = GenerationWorker(
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            max_wait_s=0.0,   # tests flush immediately — no latency budget
         )
         j = job()
         queue.enqueue(j)
@@ -65,6 +66,7 @@ class TestPollOnce:
         engine = FailingEngine(config)
         worker = GenerationWorker(
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            max_wait_s=0.0,   # tests flush immediately — no latency budget
         )
         j = job()
         queue.enqueue(j)
@@ -81,20 +83,18 @@ class TestPollOnce:
         engine = FailingEngine(config)
         worker = GenerationWorker(
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            max_wait_s=0.0,
         )
         j = job()
         queue.enqueue(j)
 
-        worker._poll_once()   # attempt 1 → requeued
-        worker._poll_once()   # attempt 2 → attempts=2, still requeued (bound is <2)
+        worker._poll_once()   # attempt 1 → FAILED → requeued (bounded retry)
+        worker._poll_once()   # attempt 2 → attempts=2 → permanent FAILED
 
         final = queue.get(j.job_id)
-        # attempts < 2 policy: second failure requeues; a third poll would
-        # be attempt 3 → permanent. Assert the bounded-retry contract:
-        worker._poll_once()
-        final = queue.get(j.job_id)
         assert final.status is JobStatus.FAILED
-        assert final.attempts == 3
+        assert final.attempts == 2
+        assert queue.depth() == 0, "permanently failed jobs do not requeue"
 
 
 class TestDrain:
@@ -102,6 +102,7 @@ class TestDrain:
         engine = FakeEngine(config)
         worker = GenerationWorker(
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            max_wait_s=0.0,   # tests flush immediately — no latency budget
         )
         for i in range(3):
             queue.enqueue(job(num_steps=30))   # same signature → one batch
@@ -117,6 +118,7 @@ class TestDrain:
         engine = FakeEngine(config)
         worker = GenerationWorker(
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            max_wait_s=0.0,   # tests flush immediately — no latency budget
         )
         # Simulate a crashed predecessor: job stuck in processing, RUNNING.
         j = job()
