@@ -1,0 +1,70 @@
+# Local development stack: API + worker + Redis + Prometheus + Grafana.
+# Production runs on Kubernetes (deployments/k8s/) — this file is for the
+# inner dev loop only. `make docker-up` / `make docker-down`.
+# Last audited: 2026-10-18
+
+name: multimodal
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes: ["redis-data:/data"]
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.api
+    environment:
+      MM_ENV: development
+      MM_REDIS_URL: redis://redis:6379/0
+      MM_ARTIFACT_STORE: local
+      MM_ARTIFACT_DIR: /var/lib/multimodal/artifacts
+      MM_AUTH_ENABLED: "true"
+      MM_API_KEY: dev-local-key
+      MM_SYNC_TIMEOUT_S: "20"
+    ports: ["8000:8000"]
+    depends_on:
+      redis: { condition: service_healthy }
+    volumes:
+      - artifact-data:/var/lib/multimodal/artifacts
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.worker
+    environment:
+      MM_ENV: development
+      MM_REDIS_URL: redis://redis:6379/0
+      MM_ARTIFACT_STORE: local
+      MM_ARTIFACT_DIR: /var/lib/multimodal/artifacts
+      MM_QUEUE_MAX_DEPTH: "1000"
+    depends_on:
+      redis: { condition: service_healthy }
+      api: { condition: service_started }
+    volumes:
+      - artifact-data:/var/lib/multimodal/artifacts
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: dev-grafana
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  redis-data:
+  artifact-data:
