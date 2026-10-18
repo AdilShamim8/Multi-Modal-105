@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from tests.fakes import FakeEngine, FakeRedis
 
 from multimodal.exceptions import GenerationError
 from multimodal.serving.artifacts import LocalArtifactStore
@@ -13,6 +12,7 @@ from multimodal.serving.queue import JobQueue
 from multimodal.serving.schemas import new_job_id
 from multimodal.serving.worker import GenerationWorker
 from multimodal.utils.devices import resolve_device
+from tests.fakes import FakeEngine, FakeRedis
 
 
 class FailingEngine(FakeEngine):

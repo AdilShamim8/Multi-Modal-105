@@ -5,13 +5,13 @@ from __future__ import annotations
 import io
 
 import pytest
-from tests.fakes import FakeRedis  # noqa: F401 - import sanity for CI
 
 from multimodal.exceptions import OutOfMemoryError
 from multimodal.serving.config import ServingConfig
 from multimodal.serving.engine import InferenceEngine
 from multimodal.serving.jobs import GenerationJob
 from multimodal.serving.schemas import new_job_id
+from tests.fakes import FakeRedis  # noqa: F401 - import sanity for CI
 
 
 class OomPipeline:
