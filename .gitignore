@@ -1,0 +1,131 @@
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ── Unit test / coverage ───────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+junit*.xml
+.hypothesis/
+
+# ── Type checkers / linters ────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ── Environments ───────────────────────────────────────────────────────────
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ── Experiment tracking ────────────────────────────────────────────────────
+wandb/
+mlruns/
+lightning_logs/
+tensorboard_logs/
+
+# ── Model artifacts (large binaries must never enter git) ──────────────────
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+*.engine
+*.trt
+checkpoints/
+outputs/
+runs/
+artifacts/
+latent_cache/
+*.mp4
+*.gif
+*.webm
+*.tar
+*.tar.gz
+*.zip
+*.parquet
+*.arrow
+
+# ── Datasets ───────────────────────────────────────────────────────────────
+data/raw/
+data/processed/
+datasets/
+*.csv
+!tests/fixtures/*.csv
+
+# ── Jupyter ────────────────────────────────────────────────────────────────
+.ipynb_checkpoints
+*.ipynb_metadata/
+
+# ── IDE / editors ──────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Terraform / infra state ────────────────────────────────────────────────
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+tfplan
+crash.log
+crash.*.log
+
+# ── Kubernetes / secrets ───────────────────────────────────────────────────
+kubeconfig
+*.kubeconfig
+secrets.yaml
+secrets.*.yaml
+
+# ── Logs / profiling ───────────────────────────────────────────────────────
+logs/
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+prof/
+*.prof
+*.trace
+
+# ── OS / misc ──────────────────────────────────────────────────────────────
+.tmp/
+tmp/
+.cache/
+celerybeat-schedule
+ instance/
