@@ -9,7 +9,7 @@ import os
 from models.diffusion.noise_scheduler import NoiseScheduler
 from models.diffusion.forward_backward import DiffusionForwardProcess
 from models.diffusion.dit import EMAModel
-from config.diffusion_config import DiffusionConfig
+from multimodal.config.diffusion_config import DiffusionConfig
 from utils.logging_utils import MetricLogger
 from utils.checkpoint import CheckpointManager
 from utils.distributed import is_main_process

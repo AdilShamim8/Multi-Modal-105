@@ -8,7 +8,7 @@ import lpips
 
 from models.vae.vae import AutoencoderKL
 from models.gans.discriminator import StyleGAN2Discriminator
-from config.vae_config import VAEConfig
+from multimodal.config.vae_config import VAEConfig
 from utils.logging_utils import MetricLogger
 from utils.checkpoint import CheckpointManager
 from utils.distributed import is_main_process, all_reduce_mean
