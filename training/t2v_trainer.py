@@ -17,7 +17,7 @@ from models.diffusion.forward_backward import DiffusionForwardProcess
 from models.diffusion.dit import EMAModel
 from models.compression.video_vae import VideoAutoencoderKL
 from models.text_encoder import CLIPTextEncoder, T5TextEncoder
-from multimodal.config.diffusion_config import T2VConfig
+from multimodal.config.t2v_config import T2VConfig
 from utils.checkpoint import CheckpointManager
 from utils.distributed import is_main_process
 from sampling.ddim_sampler import DDIMSampler

@@ -58,50 +58,6 @@ class DiffusionConfig(BaseConfig):
             )
 
 
-@dataclass
-class T2IConfig(DiffusionConfig):
-    """Text-to-Image specific configuration."""
-    vae_model_path: str = "stabilityai/sd-vae-ft-mse"
-    text_encoder_name: str = "openai/clip-vit-large-patch14"
-    tokenizer_name: str = "openai/clip-vit-large-patch14"
-    max_token_length: int = 77
-    guidance_scale: float = 7.5
-
-    # Data
-    data_root: str = "./data/laion"
-    resolution: int = 512
-    center_crop: bool = True
-    random_flip: bool = True
-
-    batch_size: int = 4
-    num_train_steps: int = 400_000
-
-
-@dataclass
-class T2VConfig(DiffusionConfig):
-    """Text-to-Video specific configuration."""
-    # Video specifics
-    num_frames: int = 16
-    frame_size: int = 256
-    fps: int = 8
-    max_video_length: float = 10.0      # seconds
-
-    # Video DiT
-    temporal_attention: bool = True
-    temporal_heads: int = 8
-    temporal_depth: int = 4
-
-    # Compression network
-    video_vae_path: str = "./checkpoints/video_vae"
-    temporal_compression: int = 4      # T // 4 latent frames
-    spatial_compression: int = 8       # H,W // 8 latent spatial
-
-    # Training
-    batch_size: int = 1
-    gradient_accumulation_steps: int = 8
-    num_train_steps: int = 1_000_000
-
-    # Data
-    video_data_root: str = "./data/webvid"
-    min_resolution: int = 256
-    max_resolution: int = 1024
+# NOTE: T2IConfig and T2VConfig live in their own modules (t2i_config.py,
+# t2v_config.py) — import them from there directly; re-exporting here would
+# create an import cycle (they subclass DiffusionConfig).
