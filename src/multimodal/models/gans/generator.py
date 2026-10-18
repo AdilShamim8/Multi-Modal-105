@@ -31,7 +31,7 @@ class MappingNetwork(nn.Module):
         lr_mul: float = 0.01,
     ):
         super().__init__()
-        layers = [PixelNorm()]
+        layers: list[nn.Module] = [PixelNorm()]
         for i in range(num_layers):
             layers.append(EqualLinear(z_dim if i == 0 else w_dim, w_dim, lr_mul=lr_mul))
             layers.append(nn.LeakyReLU(0.2))
