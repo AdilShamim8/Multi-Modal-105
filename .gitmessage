@@ -1,0 +1,32 @@
+# Commit message template — conventional commits only.
+# Activate:  git config commit.template .gitmessage
+#
+# Format:
+#   <type>(<scope>): <subject>
+#
+#   <body: what + why, wrapped at 100 chars>
+#
+#   <footer: refs, breaking changes>
+#
+# Types:
+#   feat      new capability
+#   fix       bug fix
+#   refactor  no behaviour change
+#   perf      performance improvement
+#   test      tests only
+#   docs      documentation only
+#   build     packaging / dependencies / containers
+#   ci        CI/CD pipelines
+#   chore     tooling, hygiene, non-functional
+#   revert    revert a commit
+#
+# Scopes: core, config, models, data, sampling, training, evaluation,
+#         agent, serving, cli, api, worker, k8s, docker, tf, docs, repo
+#
+# Examples:
+#   feat(serving): add continuous batching to inference engine
+#   fix(diffusion): clamp posterior variance to avoid log(0)
+#   docs(arch): add failure-mode analysis for the queue layer
+#   BREAKING CHANGE: api now requires X-API-Key on every route
+# ----------------------------------------------------------------------------
+# <type>(<scope>): <subject, imperative, <=72 chars>
