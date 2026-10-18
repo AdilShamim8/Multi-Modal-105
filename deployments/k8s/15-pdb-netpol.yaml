@@ -1,0 +1,95 @@
+# Availability guard-rails: PDB + default-deny NetworkPolicies.
+# PDB: rolling updates and node drains can never take the last replica.
+# NetPol: only the ingress controller talks to the API; only the API and
+# workers talk to Redis; workers egress to S3 + the model registry.
+# Last audited: 2026-10-18
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: multimodal-api
+  namespace: multimodal
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: multimodal
+      app.kubernetes.io/component: api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: multimodal-worker
+  namespace: multimodal
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: multimodal
+      app.kubernetes.io/component: worker
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-ingress-only-from-edge
+  namespace: multimodal
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+    - from:                  # Prometheus scrapes /metrics
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-internal-only
+  namespace: multimodal
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: redis
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}    # same-namespace only (api + workers)
+      ports:
+        - protocol: TCP
+          port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: worker-egress-controlled
+  namespace: multimodal
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+  policyTypes: [Egress]
+  egress:
+    - to:                    # Redis (job queue)
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: redis
+    - to: []                 # S3 + model registry via NAT (DNS + HTTPS)
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
