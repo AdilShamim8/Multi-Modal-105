@@ -79,6 +79,7 @@ class DPMSolver:
         clip_denoised: bool = True,
         show_progress: bool = True,
         callback: Callable | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         DPM-Solver++ multistep sampling.
@@ -90,7 +91,8 @@ class DPMSolver:
         # Build timestep schedule
         timesteps = self._build_timesteps(num_inference_steps)
 
-        x = torch.randn(*shape, device=device)
+        # Start from caller-provided state (img2img) or pure noise
+        x = latents if latents is not None else torch.randn(*shape, device=device)
         model_prev_list: list[torch.Tensor] = []
         t_prev_list: list[int] = []
 
