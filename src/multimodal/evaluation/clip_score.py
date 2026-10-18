@@ -1,4 +1,6 @@
 import logging
+from collections.abc import Callable
+from typing import Literal, overload
 
 import numpy as np
 import torch
@@ -86,9 +88,28 @@ class CLIPScoreEvaluator:
         cos_sim = (image_feats * text_feats).sum(dim=-1)  # (B,)
         return self.w * torch.clamp(cos_sim, min=0.0)
 
+    @overload
     def evaluate(
         self,
-        generator_fn,
+        generator_fn: Callable,
+        prompts: list[str],
+        batch_size: int = ...,
+        return_per_sample: Literal[False] = ...,
+    ) -> float: ...
+
+    @overload
+    def evaluate(
+        self,
+        generator_fn: Callable,
+        prompts: list[str],
+        batch_size: int = ...,
+        *,
+        return_per_sample: Literal[True],
+    ) -> tuple[float, np.ndarray]: ...
+
+    def evaluate(
+        self,
+        generator_fn: Callable,
         prompts: list[str],
         batch_size: int = 32,
         return_per_sample: bool = False,
@@ -99,9 +120,9 @@ class CLIPScoreEvaluator:
             generator_fn: callable(prompts) → (B, 3, H, W) images
             prompts: list of text prompts
         Returns:
-            mean CLIP score (and optionally per-sample scores)
+            mean CLIP score (and per-sample scores when return_per_sample)
         """
-        all_scores = []
+        all_scores: list[np.ndarray] = []
 
         for i in tqdm(range(0, len(prompts), batch_size), desc="Computing CLIP Score"):
             batch_prompts = prompts[i : i + batch_size]
@@ -115,12 +136,12 @@ class CLIPScoreEvaluator:
             scores = self.compute_clip_score(img_feats, txt_feats)
             all_scores.append(scores.cpu().numpy())
 
-        all_scores = np.concatenate(all_scores)
-        mean_score = float(np.mean(all_scores))
+        scores_flat: np.ndarray = np.concatenate(all_scores)
+        mean_score = float(np.mean(scores_flat))
         logger.info(f"CLIP Score: {mean_score:.4f}")
 
         if return_per_sample:
-            return mean_score, all_scores
+            return mean_score, scores_flat
         return mean_score
 
     @torch.no_grad()
