@@ -26,6 +26,10 @@ if TYPE_CHECKING:  # pragma: no cover - static imports for type checkers only
 __all__ = [
     "__version__",
     "RELEASE_DATE",
+    # Lazily resolved via __getattr__ (PEP 562); statically typed via the
+    # TYPE_CHECKING imports above so IDEs and mypy see the real types.
+    "MultimodalError",
+    "Registry",
 ]
 
 _LAZY = {
