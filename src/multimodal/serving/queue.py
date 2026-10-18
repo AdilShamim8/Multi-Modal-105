@@ -65,9 +65,14 @@ class JobQueue:
         self.redis.hset(self._job_key(job.job_id), mapping=job.to_redis())
         self.redis.expire(self._job_key(job.job_id), self.config.job_ttl_s)
         self.redis.lpush(self.queue_key, job.job_id)
-        log.info("job enqueued", extra={
-            "job_id": job.job_id, "depth": depth + 1, "modality": job.modality,
-        })
+        log.info(
+            "job enqueued",
+            extra={
+                "job_id": job.job_id,
+                "depth": depth + 1,
+                "modality": job.modality,
+            },
+        )
 
     def get(self, job_id: str) -> GenerationJob:
         data = self.redis.hgetall(self._job_key(job_id))
@@ -81,9 +86,7 @@ class JobQueue:
         self.redis.hset(self._job_key(job.job_id), mapping=job.to_redis())
         self.redis.expire(self._job_key(job.job_id), self.config.job_ttl_s)
         event = {"status": job.status.value, "at": time.time()}
-        self.redis.lpush(
-            f"{self._job_key(job.job_id)}:events", str(event).replace("'", '"')
-        )
+        self.redis.lpush(f"{self._job_key(job.job_id)}:events", str(event).replace("'", '"'))
 
     def depth(self) -> int:
         return self.redis.llen(self.queue_key)

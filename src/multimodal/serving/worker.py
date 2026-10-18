@@ -61,10 +61,13 @@ class GenerationWorker:
         self.engine.load("image")
         self.engine.warmup()
 
-        log.info("worker ready", extra={
-            "queue": self.config.queue_name,
-            "device": self.engine.device,
-        })
+        log.info(
+            "worker ready",
+            extra={
+                "queue": self.config.queue_name,
+                "device": self.engine.device,
+            },
+        )
         while not self._stop.is_set():
             self._poll_once()
         self._drain()
@@ -114,34 +117,48 @@ class GenerationWorker:
         self._active += 1
         job.transition(JobStatus.RUNNING)
         self.queue.update(job)
-        log.info("job started", extra={
-            "job_id": job.job_id, "modality": job.modality,
-            "attempts": job.attempts, "signature": str(self.scheduler.stats()),
-        })
+        log.info(
+            "job started",
+            extra={
+                "job_id": job.job_id,
+                "modality": job.modality,
+                "attempts": job.attempts,
+                "signature": str(self.scheduler.stats()),
+            },
+        )
 
     def _process(self, job: GenerationJob) -> None:
         try:
             output = self.engine.execute(job)
             keys = [
                 self.store.save(job.job_id, f"out-{i}", media, ext)
-                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions, strict=True))
+                for i, (media, ext) in enumerate(
+                    zip(output.artifacts, output.extensions, strict=True)
+                )
             ]
             job.artifact_keys = keys
             job.seed = output.seed_used
             job.transition(JobStatus.SUCCEEDED)
             self.queue.update(job)
-            log.info("job succeeded", extra={
-                "job_id": job.job_id, "duration_s": output.duration_s,
-                "artifacts": len(keys),
-            })
+            log.info(
+                "job succeeded",
+                extra={
+                    "job_id": job.job_id,
+                    "duration_s": output.duration_s,
+                    "artifacts": len(keys),
+                },
+            )
         except OutOfMemoryError as exc:
             self._fail_or_retry(job, exc)
         except MultimodalError as exc:
             self._fail_or_retry(job, exc)
         except Exception as exc:
-            self._fail_or_retry(job, GenerationError(
-                f"unhandled worker error: {exc}", details={"type": type(exc).__name__}
-            ))
+            self._fail_or_retry(
+                job,
+                GenerationError(
+                    f"unhandled worker error: {exc}", details={"type": type(exc).__name__}
+                ),
+            )
         finally:
             self._active -= 1
 
@@ -149,9 +166,14 @@ class GenerationWorker:
         job.error = exc.to_dict()
         metrics.record_generation(job.modality, "failed", 0.0)
         if job.attempts < 2:
-            log.warning("job failed — requeueing for retry", extra={
-                "job_id": job.job_id, "attempt": job.attempts, "error": exc.message,
-            })
+            log.warning(
+                "job failed — requeueing for retry",
+                extra={
+                    "job_id": job.job_id,
+                    "attempt": job.attempts,
+                    "error": exc.message,
+                },
+            )
             # State machine: record the failure, THEN requeue (FAILED → QUEUED).
             job.transition(JobStatus.FAILED)
             self.queue.update(job)
@@ -159,6 +181,11 @@ class GenerationWorker:
         else:
             job.transition(JobStatus.FAILED)
             self.queue.update(job)
-            log.error("job failed permanently", extra={
-                "job_id": job.job_id, "attempts": job.attempts, "error": exc.message,
-            })
+            log.error(
+                "job failed permanently",
+                extra={
+                    "job_id": job.job_id,
+                    "attempts": job.attempts,
+                    "error": exc.message,
+                },
+            )

@@ -45,8 +45,10 @@ class TestManifest:
     def test_tampered_artifact_fails_checksum(self, tmp_path):
         model = TinyModule()
         out = export_checkpoint(
-            model_dir=tmp_path, model=model,
-            sample_input=torch.randn(1, 4), fmt="torchscript",
+            model_dir=tmp_path,
+            model=model,
+            sample_input=torch.randn(1, 4),
+            fmt="torchscript",
         )
         out.write_bytes(out.read_bytes() + b"tampered")  # corrupt it
         with pytest.raises(CheckpointError, match="checksum mismatch"):
@@ -55,22 +57,28 @@ class TestManifest:
     def test_unknown_format_rejected(self, tmp_path):
         with pytest.raises(CheckpointError, match="unsupported export format"):
             export_checkpoint(
-                model_dir=tmp_path, model=TinyModule(),
-                sample_input=torch.randn(1, 4), fmt="coreml",
+                model_dir=tmp_path,
+                model=TinyModule(),
+                sample_input=torch.randn(1, 4),
+                fmt="coreml",
             )
 
     def test_tracing_requires_sample_input(self, tmp_path):
         with pytest.raises(CheckpointError, match="sample_input"):
             export_checkpoint(
-                model_dir=tmp_path, model=TinyModule(),
-                sample_input=None, fmt="torchscript",
+                model_dir=tmp_path,
+                model=TinyModule(),
+                sample_input=None,
+                fmt="torchscript",
             )
 
     def test_scripted_module_loads_and_runs(self, tmp_path):
         model = TinyModule()
         export_checkpoint(
-            model_dir=tmp_path, model=model,
-            sample_input=torch.randn(1, 4), fmt="torchscript",
+            model_dir=tmp_path,
+            model=model,
+            sample_input=torch.randn(1, 4),
+            fmt="torchscript",
         )
         loaded = torch.jit.load(str(tmp_path / "model.torchscript"))
         with torch.no_grad():
@@ -79,8 +87,10 @@ class TestManifest:
 
     def test_manifest_is_plain_json(self, tmp_path):
         export_checkpoint(
-            model_dir=tmp_path, model=TinyModule(),
-            sample_input=torch.randn(1, 4), fmt="torchscript",
+            model_dir=tmp_path,
+            model=TinyModule(),
+            sample_input=torch.randn(1, 4),
+            fmt="torchscript",
         )
         payload = json.loads((tmp_path / "bundle.json").read_text())
         assert isinstance(payload, dict) and "artifact" in payload

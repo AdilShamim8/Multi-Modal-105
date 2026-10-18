@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
@@ -69,6 +68,7 @@ class DiffusionTrainer:
 
         # LR scheduler
         from torch.optim.lr_scheduler import CosineAnnealingLR
+
         self.lr_scheduler = CosineAnnealingLR(
             self.optimizer,
             T_max=config.optimizer.num_training_steps,
@@ -81,9 +81,7 @@ class DiffusionTrainer:
             self.optimizer,
             self.train_loader,
             self.lr_scheduler,
-        ) = self.accelerator.prepare(
-            model, self.optimizer, train_loader, self.lr_scheduler
-        )
+        ) = self.accelerator.prepare(model, self.optimizer, train_loader, self.lr_scheduler)
 
         # EMA
         self.ema = EMAModel(
@@ -107,9 +105,7 @@ class DiffusionTrainer:
                 p.requires_grad_(False)
 
         # Utilities
-        self.checkpoint_mgr = CheckpointManager(
-            config.output_dir, max_checkpoints=5
-        )
+        self.checkpoint_mgr = CheckpointManager(config.output_dir, max_checkpoints=5)
         self.global_step = 0
         self.snr_gamma = config.snr_gamma
 

@@ -16,9 +16,7 @@ class DDIMSampler:
     def __init__(self, scheduler: NoiseScheduler):
         self.scheduler = scheduler
 
-    def _get_ddim_timesteps(
-        self, num_inference_steps: int, num_train_steps: int
-    ) -> np.ndarray:
+    def _get_ddim_timesteps(self, num_inference_steps: int, num_train_steps: int) -> np.ndarray:
         """Uniformly spaced subset of training timesteps."""
         step_ratio = num_train_steps // num_inference_steps
         timesteps = (np.arange(0, num_inference_steps) * step_ratio).round()[::-1].copy()
@@ -33,7 +31,7 @@ class DDIMSampler:
         conditioning: dict | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
-        eta: float = 0.0,              # 0 = deterministic, 1 = DDPM-like
+        eta: float = 0.0,  # 0 = deterministic, 1 = DDPM-like
         clip_denoised: bool = True,
         show_progress: bool = True,
         callback: Callable | None = None,
@@ -53,6 +51,7 @@ class DDIMSampler:
         x = latents if latents is not None else torch.randn(*shape, device=device)
 
         from tqdm import tqdm
+
         pbar = tqdm(timesteps, desc="DDIM sampling") if show_progress else timesteps
 
         for i, t in enumerate(pbar):
@@ -98,17 +97,20 @@ class DDIMSampler:
                 + σ_t * ε
         """
         alpha_bar_t = self.scheduler.alphas_cumprod[t].to(device)
-        alpha_bar_prev = self.scheduler.alphas_cumprod[t_prev].to(device) if t_prev >= 0 \
-                         else torch.ones(1, device=device)
+        alpha_bar_prev = (
+            self.scheduler.alphas_cumprod[t_prev].to(device)
+            if t_prev >= 0
+            else torch.ones(1, device=device)
+        )
 
-        sigma_t = eta * (
-            (1 - alpha_bar_prev) / (1 - alpha_bar_t)
-            * (1 - alpha_bar_t / alpha_bar_prev)
-        ).sqrt()
+        sigma_t = (
+            eta
+            * ((1 - alpha_bar_prev) / (1 - alpha_bar_t) * (1 - alpha_bar_t / alpha_bar_prev)).sqrt()
+        )
 
         # Direction pointing to x_t
         noise_pred = (x_t - alpha_bar_t.sqrt() * x0_pred) / (1 - alpha_bar_t).sqrt()
-        dir_xt = (1 - alpha_bar_prev - sigma_t ** 2).clamp(min=0).sqrt() * noise_pred
+        dir_xt = (1 - alpha_bar_prev - sigma_t**2).clamp(min=0).sqrt() * noise_pred
 
         noise = sigma_t * torch.randn_like(x_t) if eta > 0 else 0.0
         x_prev = alpha_bar_prev.sqrt() * x0_pred + dir_xt + noise

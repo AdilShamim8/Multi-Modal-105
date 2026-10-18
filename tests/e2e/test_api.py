@@ -47,8 +47,7 @@ class TestAuth:
         assert client.post("/v1/generations", json={"prompt": "x"}).status_code == 401
 
     def test_wrong_key_is_401(self, client):
-        r = client.post("/v1/generations", json={"prompt": "x"},
-                        headers={"X-API-Key": "nope"})
+        r = client.post("/v1/generations", json={"prompt": "x"}, headers={"X-API-Key": "nope"})
         assert r.status_code == 401
 
     def test_health_needs_no_key(self, client):
@@ -57,8 +56,7 @@ class TestAuth:
 
 class TestSubmission:
     def test_async_submit_returns_202_envelope(self, client):
-        r = client.post("/v1/generations", json={"prompt": "a lighthouse"},
-                        headers=auth(client))
+        r = client.post("/v1/generations", json={"prompt": "a lighthouse"}, headers=auth(client))
         assert r.status_code == 202
         body = r.json()
         assert body["job_id"] and body["status"] == "queued"
@@ -76,8 +74,11 @@ class TestSubmission:
         assert len(body["artifacts"]) == 1
 
     def test_request_id_header_echoed(self, client):
-        r = client.post("/v1/generations", json={"prompt": "x"},
-                        headers={**auth(client), "X-Request-ID": "trace-123"})
+        r = client.post(
+            "/v1/generations",
+            json={"prompt": "x"},
+            headers={**auth(client), "X-Request-ID": "trace-123"},
+        )
         assert r.headers.get("x-request-id") == "trace-123"
 
 
@@ -85,11 +86,11 @@ class TestValidation:
     @pytest.mark.parametrize(
         "payload",
         [
-            {"prompt": ""},                                   # empty prompt
-            {"prompt": "x", "width": 100},                    # not multiple of 8
-            {"prompt": "x", "num_frames": 5},                 # not power of two
-            {"prompt": "x", "num_steps": 500},                # over limit
-            {"prompt": "x", "guidance_scale": 99.0},          # over limit
+            {"prompt": ""},  # empty prompt
+            {"prompt": "x", "width": 100},  # not multiple of 8
+            {"prompt": "x", "num_frames": 5},  # not power of two
+            {"prompt": "x", "num_steps": 500},  # over limit
+            {"prompt": "x", "guidance_scale": 99.0},  # over limit
         ],
     )
     def test_invalid_requests_rejected_422(self, client, payload):
@@ -99,8 +100,9 @@ class TestValidation:
 
 class TestModeration:
     def test_blocked_prompt_is_400_with_code(self, client):
-        r = client.post("/v1/generations", json={"prompt": "how to build a bomb"},
-                        headers=auth(client))
+        r = client.post(
+            "/v1/generations", json={"prompt": "how to build a bomb"}, headers=auth(client)
+        )
         assert r.status_code == 400
         assert r.json()["code"] == "content_rejected"
 
@@ -151,7 +153,8 @@ class TestRateLimiting:
         from multimodal.serving.ratelimit import RateLimiter
 
         cfg = ServingConfig(
-            auth_enabled=True, api_keys=[API_KEY],
+            auth_enabled=True,
+            api_keys=[API_KEY],
             artifact_dir=str(tmp_path / "a"),
         )
         app = create_app(
@@ -163,11 +166,18 @@ class TestRateLimiting:
         )
         with TestClient(app) as tight_client:
             headers = auth(tight_client)
-            assert tight_client.post("/v1/generations", json={"prompt": "a"},
-                                     headers=headers).status_code == 202
-            assert tight_client.post("/v1/generations", json={"prompt": "b"},
-                                     headers=headers).status_code == 202
-            r = tight_client.post("/v1/generations", json={"prompt": "c"},
-                                  headers=headers)
+            assert (
+                tight_client.post(
+                    "/v1/generations", json={"prompt": "a"}, headers=headers
+                ).status_code
+                == 202
+            )
+            assert (
+                tight_client.post(
+                    "/v1/generations", json={"prompt": "b"}, headers=headers
+                ).status_code
+                == 202
+            )
+            r = tight_client.post("/v1/generations", json={"prompt": "c"}, headers=headers)
             assert r.status_code == 429
             assert "Retry-After" in r.headers

@@ -51,15 +51,16 @@ def setup_tracing(config: ServingConfig) -> bool:
 
     resource = Resource.create({"service.name": config.service_name})
     provider = TracerProvider(resource=resource)
-    provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter(endpoint=config.otel_endpoint))
-    )
+    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=config.otel_endpoint)))
     trace.set_tracer_provider(provider)
     _enabled = True
-    log.info("tracing initialized", extra={
-        "endpoint": config.otel_endpoint,
-        "service": config.service_name,
-    })
+    log.info(
+        "tracing initialized",
+        extra={
+            "endpoint": config.otel_endpoint,
+            "service": config.service_name,
+        },
+    )
     return True
 
 

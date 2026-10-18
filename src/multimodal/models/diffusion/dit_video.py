@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -14,6 +13,7 @@ from .dit import (
 # ─────────────────────────────────────────────────────────────────────────────
 # 3D RoPE (Rotary Position Embedding for video)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 def get_3d_sincos_pos_embed(
     embed_dim: int,
@@ -32,13 +32,13 @@ def get_3d_sincos_pos_embed(
         pos = np.arange(length, dtype=np.float32)
         omega = np.arange(dim // 2, dtype=np.float64)
         omega /= dim / 2.0
-        omega = 1.0 / (10000 ** omega)
+        omega = 1.0 / (10000**omega)
         out = np.outer(pos, omega)
         return np.concatenate([np.sin(out), np.cos(out)], axis=1)  # (L, dim)
 
-    t_emb = _sincos_1d(grid_t, d)     # (T, d)
-    h_emb = _sincos_1d(grid_h, d)     # (H, d)
-    w_emb = _sincos_1d(grid_w, d)     # (W, d)
+    t_emb = _sincos_1d(grid_t, d)  # (T, d)
+    h_emb = _sincos_1d(grid_h, d)  # (H, d)
+    w_emb = _sincos_1d(grid_w, d)  # (W, d)
 
     # Combine: for each (t, h, w), concat all three
     T, H, W = grid_t, grid_h, grid_w
@@ -49,15 +49,16 @@ def get_3d_sincos_pos_embed(
             for wi in range(W):
                 idx = ti * H * W + hi * W + wi
                 pos[idx, :d] = t_emb[ti]
-                pos[idx, d:2*d] = h_emb[hi]
-                pos[idx, 2*d:] = w_emb[wi]
+                pos[idx, d : 2 * d] = h_emb[hi]
+                pos[idx, 2 * d :] = w_emb[wi]
 
-    return torch.from_numpy(pos).float()   # (T*H*W, embed_dim)
+    return torch.from_numpy(pos).float()  # (T*H*W, embed_dim)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Temporal Attention Block
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class TemporalAttentionBlock(nn.Module):
     """
@@ -108,12 +109,15 @@ class TemporalAttentionBlock(nn.Module):
         # Reshape: (B, T*S, D) → (B*S, T, D) to attend over time
         x_norm = rearrange(x_norm, "b (t s) d -> (b s) t d", t=T, s=S)
 
-        q = rearrange(self.q(x_norm), "bs t (nh hd) -> bs nh t hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        k = rearrange(self.k(x_norm), "bs t (nh hd) -> bs nh t hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        v = rearrange(self.v(x_norm), "bs t (nh hd) -> bs nh t hd",
-                      nh=self.num_heads, hd=self.head_dim)
+        q = rearrange(
+            self.q(x_norm), "bs t (nh hd) -> bs nh t hd", nh=self.num_heads, hd=self.head_dim
+        )
+        k = rearrange(
+            self.k(x_norm), "bs t (nh hd) -> bs nh t hd", nh=self.num_heads, hd=self.head_dim
+        )
+        v = rearrange(
+            self.v(x_norm), "bs t (nh hd) -> bs nh t hd", nh=self.num_heads, hd=self.head_dim
+        )
 
         attn_out = F.scaled_dot_product_attention(q, k, v)
         attn_out = rearrange(attn_out, "bs nh t hd -> bs t (nh hd)")
@@ -129,6 +133,7 @@ class TemporalAttentionBlock(nn.Module):
 # Video DiT Block
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoDiTBlock(nn.Module):
     """
     Video Diffusion Transformer block.
@@ -137,7 +142,7 @@ class VideoDiTBlock(nn.Module):
         2. Temporal attention (across T dim)
         3. Cross-attention with text
         4. adaLN-Zero MLP (FFN)
-    
+
     Supports full spatio-temporal modeling with factorized attention.
     """
 
@@ -164,9 +169,7 @@ class VideoDiTBlock(nn.Module):
         self.spatial_out = nn.Linear(hidden_size, hidden_size, bias=False)
 
         # ── Temporal attention ────────────────────────────────────────────
-        self.temporal_attn = TemporalAttentionBlock(
-            hidden_size, temporal_heads, dropout
-        )
+        self.temporal_attn = TemporalAttentionBlock(hidden_size, temporal_heads, dropout)
 
         # ── Cross-attention (text conditioning) ───────────────────────────
         self.has_cross_attn = context_dim is not None
@@ -188,26 +191,30 @@ class VideoDiTBlock(nn.Module):
         )
 
     def _spatial_attn(self, x_norm: torch.Tensor) -> torch.Tensor:
-        q = rearrange(self.spatial_q(x_norm), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        k = rearrange(self.spatial_k(x_norm), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        v = rearrange(self.spatial_v(x_norm), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
+        q = rearrange(
+            self.spatial_q(x_norm), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        k = rearrange(
+            self.spatial_k(x_norm), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        v = rearrange(
+            self.spatial_v(x_norm), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
         out = F.scaled_dot_product_attention(q, k, v)
         out = rearrange(out, "b nh n hd -> b n (nh hd)")
         return self.spatial_out(out)
 
-    def _cross_attn(
-        self, x: torch.Tensor, context: torch.Tensor
-    ) -> torch.Tensor:
+    def _cross_attn(self, x: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
         x_norm = self.cross_norm(x)
-        q = rearrange(self.cross_q(x_norm), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        k = rearrange(self.cross_k(context), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        v = rearrange(self.cross_v(context), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
+        q = rearrange(
+            self.cross_q(x_norm), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        k = rearrange(
+            self.cross_k(context), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        v = rearrange(
+            self.cross_v(context), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
         out = F.scaled_dot_product_attention(q, k, v)
         out = rearrange(out, "b nh n hd -> b n (nh hd)")
         return self.cross_out(out)
@@ -250,6 +257,7 @@ class VideoDiTBlock(nn.Module):
 # Video Patch Embedding
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoPatchEmbed(nn.Module):
     """
     3D patch embedding for video latents.
@@ -270,7 +278,8 @@ class VideoPatchEmbed(nn.Module):
         self.embed_dim = embed_dim
 
         self.proj = nn.Conv3d(
-            in_channels, embed_dim,
+            in_channels,
+            embed_dim,
             kernel_size=(temporal_patch_size, spatial_patch_size, spatial_patch_size),
             stride=(temporal_patch_size, spatial_patch_size, spatial_patch_size),
         )
@@ -285,7 +294,7 @@ class VideoPatchEmbed(nn.Module):
             S_tokens: number of spatial tokens per frame
         """
         B, C, T, H, W = x.shape
-        x = self.proj(x)          # (B, D, T', H', W')
+        x = self.proj(x)  # (B, D, T', H', W')
         B, D, T_, H_, W_ = x.shape
         x = rearrange(x, "b d t h w -> b (t h w) d")
         T_tokens = T_
@@ -297,15 +306,16 @@ class VideoPatchEmbed(nn.Module):
 # Full Video DiT
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoDiT(nn.Module):
     """
     Video Diffusion Transformer (Video DiT).
-    
+
     Architecture based on:
     - Open-Sora (PKU-Yuan Lab)
     - CogVideo (Zhipu AI)
     - Sora (OpenAI) — as described in technical report
-    
+
     Key design choices:
     1. Factorized spatial + temporal attention
     2. 3D sinusoidal positional embeddings
@@ -318,8 +328,8 @@ class VideoDiT(nn.Module):
         self,
         # Input shape
         num_frames: int = 16,
-        frame_size: int = 32,              # latent spatial size (after VAE)
-        in_channels: int = 16,             # video VAE latent channels
+        frame_size: int = 32,  # latent spatial size (after VAE)
+        in_channels: int = 16,  # video VAE latent channels
         # Architecture
         spatial_patch_size: int = 2,
         temporal_patch_size: int = 1,
@@ -329,8 +339,8 @@ class VideoDiT(nn.Module):
         temporal_heads: int = 8,
         mlp_ratio: float = 4.0,
         # Conditioning
-        context_dim: int = 768,            # text encoder dim
-        pooled_text_dim: int = 1024,       # pooled text for adaLN
+        context_dim: int = 768,  # text encoder dim
+        pooled_text_dim: int = 1024,  # pooled text for adaLN
         # Output
         learn_sigma: bool = True,
         dropout: float = 0.0,
@@ -379,18 +389,20 @@ class VideoDiT(nn.Module):
         self.text_pool_proj = nn.Linear(pooled_text_dim, hidden_size)
 
         # ── Transformer blocks ────────────────────────────────────────────
-        self.blocks = nn.ModuleList([
-            VideoDiTBlock(
-                hidden_size=hidden_size,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                cond_dim=hidden_size,
-                context_dim=hidden_size,   # projected text
-                temporal_heads=temporal_heads,
-                dropout=dropout,
-            )
-            for _ in range(depth)
-        ])
+        self.blocks = nn.ModuleList(
+            [
+                VideoDiTBlock(
+                    hidden_size=hidden_size,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    cond_dim=hidden_size,
+                    context_dim=hidden_size,  # projected text
+                    temporal_heads=temporal_heads,
+                    dropout=dropout,
+                )
+                for _ in range(depth)
+            ]
+        )
 
         # ── Final layer ───────────────────────────────────────────────────
         self.final_layer = FinalLayer(
@@ -410,6 +422,7 @@ class VideoDiT(nn.Module):
                 nn.init.xavier_uniform_(m.weight)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
+
         self.apply(_basic)
 
     def unpatchify(
@@ -429,29 +442,28 @@ class VideoDiT(nn.Module):
         C = self.out_channels
 
         x = rearrange(
-            x, "b (t hp wp) (p1 p2 c) -> b c t (hp p1) (wp p2)",
-            t=T, hp=Hp, wp=Wp, p1=p, p2=p, c=C
+            x, "b (t hp wp) (p1 p2 c) -> b c t (hp p1) (wp p2)", t=T, hp=Hp, wp=Wp, p1=p, p2=p, c=C
         )
         return x
 
     def forward(
         self,
-        x: torch.Tensor,                              # (B, C, T, H, W)
-        t: torch.Tensor,                              # (B,) timesteps
-        text_embeds: torch.Tensor | None = None,   # (B, seq, context_dim)
-        text_pool: torch.Tensor | None = None,     # (B, pooled_text_dim)
+        x: torch.Tensor,  # (B, C, T, H, W)
+        t: torch.Tensor,  # (B,) timesteps
+        text_embeds: torch.Tensor | None = None,  # (B, seq, context_dim)
+        text_pool: torch.Tensor | None = None,  # (B, pooled_text_dim)
         force_drop_text: bool = False,
     ) -> torch.Tensor:
         B, C, T, H, W = x.shape
 
         # Patch embed
-        tokens, T_tok, S_tok = self.patch_embed(x)   # (B, N, D)
-        tokens = tokens + self.pos_embed[:, :tokens.shape[1]]
+        tokens, T_tok, S_tok = self.patch_embed(x)  # (B, N, D)
+        tokens = tokens + self.pos_embed[:, : tokens.shape[1]]
 
         # Conditioning
-        t_emb = self.t_embedder(t)                    # (B, D)
+        t_emb = self.t_embedder(t)  # (B, D)
         if text_pool is not None:
-            pool_emb = self.text_pool_proj(text_pool) # (B, D)
+            pool_emb = self.text_pool_proj(text_pool)  # (B, D)
             c = t_emb + pool_emb
         else:
             c = t_emb
@@ -459,14 +471,14 @@ class VideoDiT(nn.Module):
         # Project text sequence for cross-attention
         ctx = None
         if text_embeds is not None:
-            ctx = self.text_proj(text_embeds)         # (B, seq, D)
+            ctx = self.text_proj(text_embeds)  # (B, seq, D)
 
         # Transformer
         for block in self.blocks:
             tokens = block(tokens, c, T_tok, S_tok, context=ctx)
 
         # Final layer
-        tokens = self.final_layer(tokens, c)          # (B, N, p²C)
+        tokens = self.final_layer(tokens, c)  # (B, N, p²C)
 
         # Unpatchify
         p = self.patch_embed.spatial_patch_size
@@ -490,10 +502,10 @@ class VideoDiT(nn.Module):
         t_double = torch.cat([t, t], dim=0)
 
         # Stack conditional + unconditional
-        null_te = null_text_embeds if null_text_embeds is not None \
-                  else torch.zeros_like(text_embeds)
-        null_tp = null_text_pool if null_text_pool is not None \
-                  else torch.zeros_like(text_pool)
+        null_te = (
+            null_text_embeds if null_text_embeds is not None else torch.zeros_like(text_embeds)
+        )
+        null_tp = null_text_pool if null_text_pool is not None else torch.zeros_like(text_pool)
 
         text_double = torch.cat([text_embeds, null_te], dim=0)
         pool_double = torch.cat([text_pool, null_tp], dim=0)

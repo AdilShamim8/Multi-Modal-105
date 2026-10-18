@@ -57,9 +57,7 @@ def create_app(
         configure_logging()
         app.state.config = cfg
         app.state.env = cfg.env
-        app.state.rate_limiter = rate_limiter or RateLimiter(
-            capacity=20.0, refill_per_s=5.0
-        )
+        app.state.rate_limiter = rate_limiter or RateLimiter(capacity=20.0, refill_per_s=5.0)
         app.state.moderation = moderation or ModerationGate(
             enabled=cfg.moderation_enabled,
             mode=cfg.moderation_mode,
@@ -83,9 +81,14 @@ def create_app(
                 log.error("startup model load failed", extra={"error": exc.message})
                 if cfg.env == "production":
                     raise
-        log.info("api ready", extra={
-            "version": __version__, "env": cfg.env, "port": cfg.port,
-        })
+        log.info(
+            "api ready",
+            extra={
+                "version": __version__,
+                "env": cfg.env,
+                "port": cfg.port,
+            },
+        )
         yield
         log.info("api shutting down")
 

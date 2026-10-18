@@ -24,14 +24,14 @@ logger = logging.getLogger(__name__)
 class MultimodalGenerationAgent:
     """
     Production Multi-modal Generation Agent.
-    
+
     Unified interface for:
     - Text-to-Image (T2I) generation
     - Text-to-Video (T2V) generation
     - Image-to-Image (I2I) editing
     - Image-to-Video (I2V) animation
     - Video-to-Video (V2V) editing (future)
-    
+
     System overview:
     ┌─────────────────────────────────────────────┐
     │           MultimodalGenerationAgent         │
@@ -214,7 +214,7 @@ class MultimodalGenerationAgent:
     ) -> dict[str, Any]:
         """
         Generate image(s) from text prompt.
-        
+
         Args:
             prompt:              Text description of desired image
             negative_prompt:     Text to avoid in generation
@@ -275,12 +275,12 @@ class MultimodalGenerationAgent:
         num_inference_steps: int | None = None,
         guidance_scale: float | None = None,
         seed: int | None = None,
-        output_format: str = "gif",        # "gif" | "mp4" | "frames"
+        output_format: str = "gif",  # "gif" | "mp4" | "frames"
         output_path: str | None = None,
     ) -> dict[str, Any]:
         """
         Generate video from text prompt.
-        
+
         Args:
             prompt:              Text description of desired video
             num_frames:          Number of frames to generate
@@ -347,12 +347,14 @@ class MultimodalGenerationAgent:
 
             # CFG: run cond + uncond
             model_out_cond = self.t2v_model(
-                latents, t_batch,
+                latents,
+                t_batch,
                 text_embeds=pos_embeds,
                 text_pool=pos_pool,
             )
             model_out_uncond = self.t2v_model(
-                latents, t_batch,
+                latents,
+                t_batch,
                 text_embeds=neg_embeds,
                 text_pool=neg_pool,
             )
@@ -363,18 +365,20 @@ class MultimodalGenerationAgent:
                 model_out_uncond, _ = model_out_uncond.chunk(2, dim=1)
 
             # Guidance
-            model_out = model_out_uncond + cfg_scale * (
-                model_out_cond - model_out_uncond
-            )
+            model_out = model_out_uncond + cfg_scale * (model_out_cond - model_out_uncond)
 
             # DDIM step
             x0_pred = self.scheduler.get_x0_prediction(model_out, latents, t_batch)
             x0_pred = x0_pred.clamp(-1.0, 1.0)
 
-            t_prev_idx = i + 1 if i < len(self.scheduler.timesteps) - 1 \
-                         else len(self.scheduler.timesteps) - 1
-            t_prev = self.scheduler.timesteps[t_prev_idx] if i < len(
-                self.scheduler.timesteps) - 1 else 0
+            t_prev_idx = (
+                i + 1
+                if i < len(self.scheduler.timesteps) - 1
+                else len(self.scheduler.timesteps) - 1
+            )
+            t_prev = (
+                self.scheduler.timesteps[t_prev_idx] if i < len(self.scheduler.timesteps) - 1 else 0
+            )
 
             t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
 
@@ -385,7 +389,7 @@ class MultimodalGenerationAgent:
             latents = alpha_prev.sqrt() * x0_pred + dir_xt
 
         # ── Decode video latents ──────────────────────────────────────────
-        videos = self.video_vae.decode_from_latent(latents)   # (B, 3, T, H, W)
+        videos = self.video_vae.decode_from_latent(latents)  # (B, 3, T, H, W)
         videos = ((videos.clamp(-1, 1) + 1) / 2 * 255).byte()
 
         # ── Save output ───────────────────────────────────────────────────
@@ -423,7 +427,8 @@ class MultimodalGenerationAgent:
             elif output_format == "mp4":
                 out_file = str(out_p.with_suffix(".mp4"))
                 imageio.mimwrite(
-                    out_file, frames_np,
+                    out_file,
+                    frames_np,
                     fps=fps,
                     quality=8,
                     macro_block_size=1,
@@ -432,16 +437,14 @@ class MultimodalGenerationAgent:
                 frames_dir = str(out_p.with_suffix(""))
                 Path(frames_dir).mkdir(exist_ok=True)
                 for fi, frame in enumerate(frames_np):
-                    Image.fromarray(frame).save(
-                        f"{frames_dir}/frame_{fi:04d}.png"
-                    )
+                    Image.fromarray(frame).save(f"{frames_dir}/frame_{fi:04d}.png")
                 out_file = frames_dir
 
             saved_paths.append(out_file)
 
         return {
             "video_paths": saved_paths,
-            "frames": all_frames,        # List of (T, H, W, 3) numpy arrays
+            "frames": all_frames,  # List of (T, H, W, 3) numpy arrays
             "metadata": {
                 "prompts": prompt,
                 "num_frames": num_frames,
@@ -452,7 +455,7 @@ class MultimodalGenerationAgent:
                 "seed": seed,
                 "elapsed_seconds": elapsed,
                 "format": output_format,
-            }
+            },
         }
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -496,7 +499,7 @@ class MultimodalGenerationAgent:
                 "guidance_scale": guidance_scale,
                 "steps": num_inference_steps,
                 "seed": seed,
-            }
+            },
         }
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -517,19 +520,11 @@ class MultimodalGenerationAgent:
         """Return model parameter counts and configuration."""
         info = {}
         if self.t2i_model:
-            info["t2i_params"] = sum(
-                p.numel() for p in self.t2i_model.parameters()
-            ) / 1e6
+            info["t2i_params"] = sum(p.numel() for p in self.t2i_model.parameters()) / 1e6
         if self.t2v_model:
-            info["t2v_params"] = sum(
-                p.numel() for p in self.t2v_model.parameters()
-            ) / 1e6
-        info["image_vae_params"] = sum(
-            p.numel() for p in self.image_vae.parameters()
-        ) / 1e6
-        info["video_vae_params"] = sum(
-            p.numel() for p in self.video_vae.parameters()
-        ) / 1e6
+            info["t2v_params"] = sum(p.numel() for p in self.t2v_model.parameters()) / 1e6
+        info["image_vae_params"] = sum(p.numel() for p in self.image_vae.parameters()) / 1e6
+        info["video_vae_params"] = sum(p.numel() for p in self.video_vae.parameters()) / 1e6
         return info
 
     def save_config(self, path: str):
@@ -591,7 +586,8 @@ def main():
         result = agent.generate_image(
             prompt=args.prompt,
             negative_prompt=args.negative_prompt,
-            height=512, width=512,
+            height=512,
+            width=512,
             seed=args.seed,
         )
         for i, img in enumerate(result["images"]):

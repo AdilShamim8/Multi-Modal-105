@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # LAION-style local dataset
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class LAIONDataset(Dataset):
     """
     Local LAION-style image-text dataset.
@@ -71,9 +72,7 @@ class LAIONDataset(Dataset):
 
         # Size filter
         if "width" in df.columns and "height" in df.columns:
-            df = df[
-                (df["width"] >= min_size) & (df["height"] >= min_size)
-            ]
+            df = df[(df["width"] >= min_size) & (df["height"] >= min_size)]
 
         # Aesthetic score filter
         if aesthetic_score is not None and "aesthetic_score" in df.columns:
@@ -133,6 +132,7 @@ class LAIONDataset(Dataset):
 # WebDataset for streaming large-scale data (LAION-5B, etc.)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class WebDatasetT2I:
     """
     WebDataset-based streaming dataloader for internet-scale datasets.
@@ -179,12 +179,17 @@ class WebDatasetT2I:
             .batched(batch_size, partial=False)
         )
 
-        self.loader = wds.WebLoader(
-            dataset,
-            batch_size=None,
-            num_workers=num_workers,
-            persistent_workers=True,
-        ).unbatched().shuffle(1000).batched(batch_size)
+        self.loader = (
+            wds.WebLoader(
+                dataset,
+                batch_size=None,
+                num_workers=num_workers,
+                persistent_workers=True,
+            )
+            .unbatched()
+            .shuffle(1000)
+            .batched(batch_size)
+        )
 
     def _preprocess(self, sample: dict) -> dict | None:
         try:
@@ -225,6 +230,7 @@ class WebDatasetT2I:
 # ImageNet-style class-conditional dataset (for DiT)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class ImageNetDataset(Dataset):
     """
     Class-conditional image dataset (ImageNet format).
@@ -256,10 +262,7 @@ class ImageNetDataset(Dataset):
                 for img_path in cls_dir.glob(ext):
                     self.samples.append((img_path, cls_idx))
 
-        logger.info(
-            f"ImageNetDataset: {len(self.samples)} images, "
-            f"{self.num_classes} classes"
-        )
+        logger.info(f"ImageNetDataset: {len(self.samples)} images, " f"{self.num_classes} classes")
 
     def __len__(self) -> int:
         return len(self.samples)

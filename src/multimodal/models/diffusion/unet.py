@@ -9,6 +9,7 @@ from einops import rearrange
 # Timestep embedding
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class TimestepEmbedding(nn.Module):
     """Sinusoidal timestep embedding → MLP projection."""
 
@@ -26,9 +27,7 @@ class TimestepEmbedding(nn.Module):
     def sinusoidal_embedding(self, t: torch.Tensor) -> torch.Tensor:
         half = self.dim // 2
         freqs = torch.exp(
-            -math.log(self.max_period)
-            * torch.arange(half, device=t.device).float()
-            / half
+            -math.log(self.max_period) * torch.arange(half, device=t.device).float() / half
         )
         args = t.float()[:, None] * freqs[None]
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
@@ -44,6 +43,7 @@ class TimestepEmbedding(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 # Cross-attention for text conditioning
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class CrossAttention(nn.Module):
     """Multi-head cross-attention for text → spatial conditioning."""
@@ -77,7 +77,7 @@ class CrossAttention(nn.Module):
         mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if context is None:
-            context = x          # self-attention fallback
+            context = x  # self-attention fallback
 
         B, N, D = x.shape
         x_norm = self.norm_q(x)
@@ -88,14 +88,15 @@ class CrossAttention(nn.Module):
 
         # Reshape for multi-head
         def split_heads(t):
-            return rearrange(t, "b n (nh hd) -> b nh n hd",
-                             nh=self.num_heads, hd=self.head_dim)
+            return rearrange(t, "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim)
 
         q, k, v = split_heads(q), split_heads(k), split_heads(v)
 
         # Flash attention
         attn_out = F.scaled_dot_product_attention(
-            q, k, v,
+            q,
+            k,
+            v,
             attn_mask=mask,
             dropout_p=0.0 if not self.training else 0.1,
         )
@@ -107,6 +108,7 @@ class CrossAttention(nn.Module):
 # Feed-forward network
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class FeedForward(nn.Module):
     def __init__(self, dim: int, mult: float = 4.0, dropout: float = 0.0):
         super().__init__()
@@ -114,7 +116,7 @@ class FeedForward(nn.Module):
         self.net = nn.Sequential(
             nn.LayerNorm(dim),
             nn.Linear(dim, inner * 2),
-            nn.GLU(),                    # gated linear unit
+            nn.GLU(),  # gated linear unit
             nn.Dropout(dropout),
             nn.Linear(inner, dim),
         )
@@ -126,6 +128,7 @@ class FeedForward(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 # Transformer block (spatial)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class SpatialTransformerBlock(nn.Module):
     """
@@ -146,14 +149,20 @@ class SpatialTransformerBlock(nn.Module):
         self.norm = nn.GroupNorm(32, channels)
         self.proj_in = nn.Conv2d(channels, channels, 1)
 
-        self.layers = nn.ModuleList([
-            nn.ModuleList([
-                CrossAttention(channels, channels, num_heads, head_dim, dropout),  # self
-                CrossAttention(channels, context_dim, num_heads, head_dim, dropout),  # cross
-                FeedForward(channels, dropout=dropout),
-            ])
-            for _ in range(depth)
-        ])
+        self.layers = nn.ModuleList(
+            [
+                nn.ModuleList(
+                    [
+                        CrossAttention(channels, channels, num_heads, head_dim, dropout),  # self
+                        CrossAttention(
+                            channels, context_dim, num_heads, head_dim, dropout
+                        ),  # cross
+                        FeedForward(channels, dropout=dropout),
+                    ]
+                )
+                for _ in range(depth)
+            ]
+        )
 
         self.proj_out = nn.Conv2d(channels, channels, 1)
         nn.init.zeros_(self.proj_out.weight)
@@ -183,6 +192,7 @@ class SpatialTransformerBlock(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 # U-Net building blocks
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class ResBlock(nn.Module):
     """Residual block with timestep embedding injection."""
@@ -244,9 +254,7 @@ class Downsample(nn.Module):
     def __init__(self, channels: int, use_conv: bool = True):
         super().__init__()
         self.op = (
-            nn.Conv2d(channels, channels, 3, stride=2, padding=1)
-            if use_conv
-            else nn.AvgPool2d(2)
+            nn.Conv2d(channels, channels, 3, stride=2, padding=1) if use_conv else nn.AvgPool2d(2)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -270,6 +278,7 @@ class Upsample(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 # Full U-Net
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class UNet2DConditionModel(nn.Module):
     """
@@ -324,7 +333,7 @@ class UNet2DConditionModel(nn.Module):
         in_ch = channels[0]
 
         for i, out_ch in enumerate(channels):
-            res = 2 ** (len(channels) - 1 - i)          # relative resolution
+            res = 2 ** (len(channels) - 1 - i)  # relative resolution
             use_attn = res in attention_resolutions
 
             block = nn.ModuleList()
@@ -333,14 +342,16 @@ class UNet2DConditionModel(nn.Module):
                 in_ch = out_ch
                 skip_channels.append(in_ch)
                 if use_attn:
-                    block.append(SpatialTransformerBlock(
-                        in_ch, num_heads, head_dim, context_dim, dropout=dropout
-                    ))
+                    block.append(
+                        SpatialTransformerBlock(
+                            in_ch, num_heads, head_dim, context_dim, dropout=dropout
+                        )
+                    )
 
             self.down_blocks.append(block)
             if i < len(channels) - 1:
                 self.down_samples.append(Downsample(in_ch))
-                skip_channels.append(in_ch)   # downsample output is a skip
+                skip_channels.append(in_ch)  # downsample output is a skip
             else:
                 self.down_samples.append(None)
 
@@ -356,7 +367,7 @@ class UNet2DConditionModel(nn.Module):
         self.up_samples = nn.ModuleList()
 
         for i, out_ch in enumerate(reversed(channels)):
-            res = 2 ** i
+            res = 2**i
             use_attn = res in attention_resolutions
 
             block = nn.ModuleList()
@@ -365,9 +376,11 @@ class UNet2DConditionModel(nn.Module):
                 block.append(ResBlock(in_ch + skip_ch, out_ch, time_emb_dim, dropout))
                 in_ch = out_ch
                 if use_attn:
-                    block.append(SpatialTransformerBlock(
-                        in_ch, num_heads, head_dim, context_dim, dropout=dropout
-                    ))
+                    block.append(
+                        SpatialTransformerBlock(
+                            in_ch, num_heads, head_dim, context_dim, dropout=dropout
+                        )
+                    )
 
             self.up_blocks.append(block)
             if i < len(channels) - 1:
@@ -400,7 +413,7 @@ class UNet2DConditionModel(nn.Module):
         """
         # Time embedding
         t_emb = self.time_embedding(timesteps)
-        t_emb = self.time_proj(t_emb)          # (B, time_emb_dim)
+        t_emb = self.time_proj(t_emb)  # (B, time_emb_dim)
 
         # Input
         h = self.conv_in(x)

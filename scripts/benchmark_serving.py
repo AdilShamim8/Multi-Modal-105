@@ -62,12 +62,16 @@ def main() -> int:
 
     per_job = [t / args.batch for t in timings]
     print(f"profile: steps={args.steps} batch={args.batch} runs={args.runs}")
-    print(f"wall/batch  p50={statistics.median(timings):.3f}s "
-          f"p95={sorted(timings)[int(len(timings) * 0.95) - 1]:.3f}s")
+    print(
+        f"wall/batch  p50={statistics.median(timings):.3f}s "
+        f"p95={sorted(timings)[int(len(timings) * 0.95) - 1]:.3f}s"
+    )
     print(f"wall/job    p50={statistics.median(per_job):.3f}s")
     print(f"throughput {1.0 / statistics.median(per_job):.2f} jobs/s/worker")
-    print("NOTE: swap build_fake_batch_pipeline for the loaded pipeline "
-          "before citing numbers in capacity-planning.md.")
+    print(
+        "NOTE: swap build_fake_batch_pipeline for the loaded pipeline "
+        "before citing numbers in capacity-planning.md."
+    )
     return 0
 
 

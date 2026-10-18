@@ -49,8 +49,9 @@ class RateLimiter:
     def _bucket(self, key: str) -> Bucket:
         bucket = self._buckets.get(key)
         if bucket is None:
-            bucket = Bucket(tokens=self.capacity, capacity=self.capacity,
-                            refill_per_s=self.refill_per_s)
+            bucket = Bucket(
+                tokens=self.capacity, capacity=self.capacity, refill_per_s=self.refill_per_s
+            )
             self._buckets[key] = bucket
         return bucket
 

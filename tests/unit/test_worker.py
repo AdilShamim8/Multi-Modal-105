@@ -47,8 +47,11 @@ class TestPollOnce:
     def test_job_completes_end_to_end(self, config, queue, tmp_path):
         engine = FakeEngine(config)
         worker = GenerationWorker(
-            queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
-            max_wait_s=0.0,   # tests flush immediately — no latency budget
+            queue,
+            engine,
+            LocalArtifactStore(str(tmp_path / "a")),
+            config,
+            max_wait_s=0.0,  # tests flush immediately — no latency budget
         )
         j = job()
         queue.enqueue(j)
@@ -64,8 +67,11 @@ class TestPollOnce:
     def test_failed_job_requeues_for_retry(self, config, queue, tmp_path):
         engine = FailingEngine(config)
         worker = GenerationWorker(
-            queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
-            max_wait_s=0.0,   # tests flush immediately — no latency budget
+            queue,
+            engine,
+            LocalArtifactStore(str(tmp_path / "a")),
+            config,
+            max_wait_s=0.0,  # tests flush immediately — no latency budget
         )
         j = job()
         queue.enqueue(j)
@@ -81,14 +87,17 @@ class TestPollOnce:
     def test_permanent_failure_after_second_attempt(self, config, queue, tmp_path):
         engine = FailingEngine(config)
         worker = GenerationWorker(
-            queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
+            queue,
+            engine,
+            LocalArtifactStore(str(tmp_path / "a")),
+            config,
             max_wait_s=0.0,
         )
         j = job()
         queue.enqueue(j)
 
-        worker._poll_once()   # attempt 1 → FAILED → requeued (bounded retry)
-        worker._poll_once()   # attempt 2 → attempts=2 → permanent FAILED
+        worker._poll_once()  # attempt 1 → FAILED → requeued (bounded retry)
+        worker._poll_once()  # attempt 2 → attempts=2 → permanent FAILED
 
         final = queue.get(j.job_id)
         assert final.status is JobStatus.FAILED
@@ -100,11 +109,14 @@ class TestDrain:
     def test_flush_all_processes_pending_jobs(self, config, queue, tmp_path):
         engine = FakeEngine(config)
         worker = GenerationWorker(
-            queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
-            max_wait_s=0.0,   # tests flush immediately — no latency budget
+            queue,
+            engine,
+            LocalArtifactStore(str(tmp_path / "a")),
+            config,
+            max_wait_s=0.0,  # tests flush immediately — no latency budget
         )
         for _ in range(3):
-            queue.enqueue(job(num_steps=30))   # same signature → one batch
+            queue.enqueue(job(num_steps=30))  # same signature → one batch
 
         for _ in range(3):
             worker._poll_once()

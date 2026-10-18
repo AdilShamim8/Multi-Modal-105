@@ -12,9 +12,16 @@ from multimodal.models.gans.stylegan import StyleGAN2
 def tiny_gan():
     torch.manual_seed(0)
     return StyleGAN2(
-        z_dim=64, w_dim=64, img_resolution=32, img_channels=3,
-        channel_base=512, channel_max=64, num_mapping_layers=2,
-        loss_type="softplus", r1_gamma=10.0, lazy_reg_interval=4,
+        z_dim=64,
+        w_dim=64,
+        img_resolution=32,
+        img_channels=3,
+        channel_base=512,
+        channel_max=64,
+        num_mapping_layers=2,
+        loss_type="softplus",
+        r1_gamma=10.0,
+        lazy_reg_interval=4,
     )
 
 
@@ -40,8 +47,12 @@ class TestLosses:
 
     def test_hinge_variant(self):
         gan = StyleGAN2(
-            z_dim=64, w_dim=64, img_resolution=32,
-            channel_base=512, channel_max=64, loss_type="hinge",
+            z_dim=64,
+            w_dim=64,
+            img_resolution=32,
+            channel_base=512,
+            channel_max=64,
+            loss_type="hinge",
         )
         real = torch.randn(2, 1)
         fake = torch.randn(2, 1)
@@ -61,8 +72,12 @@ class TestLazyR1:
 
     def test_disabled_when_gamma_zero(self):
         gan = StyleGAN2(
-            z_dim=64, w_dim=64, img_resolution=32,
-            channel_base=512, channel_max=64, r1_gamma=0.0,
+            z_dim=64,
+            w_dim=64,
+            img_resolution=32,
+            channel_base=512,
+            channel_max=64,
+            r1_gamma=0.0,
         )
         assert gan.r1_lazy(torch.randn(1, 3, 32, 32), 0) is None
 

@@ -111,9 +111,7 @@ class GANTrainer:
         grid = []
         for _ in range(0, n, 4):
             batch = min(4, n - len(grid) * 4)
-            grid.append(
-                self.gan.sample(batch, truncation_psi=truncation_psi, device=self.device)
-            )
+            grid.append(self.gan.sample(batch, truncation_psi=truncation_psi, device=self.device))
         return StyleGAN2.stabilize_images(torch.cat(grid, dim=0))
 
     # ── Full loop ─────────────────────────────────────────────────────────

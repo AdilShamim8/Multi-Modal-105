@@ -37,11 +37,7 @@ class CheckpointManager:
         ckpt_path.mkdir(exist_ok=True)
 
         # Save model state
-        model_state = (
-            model.module.state_dict()
-            if hasattr(model, "module")
-            else model.state_dict()
-        )
+        model_state = model.module.state_dict() if hasattr(model, "module") else model.state_dict()
         torch.save(model_state, ckpt_path / "model.pt")
 
         # Save EMA model
@@ -104,20 +100,14 @@ class CheckpointManager:
 
         if ema_model is not None and (ckpt_path / "ema_model.pt").exists():
             state = torch.load(ckpt_path / "ema_model.pt", map_location="cpu")
-            target = (
-                ema_model.module if hasattr(ema_model, "module") else ema_model
-            )
+            target = ema_model.module if hasattr(ema_model, "module") else ema_model
             target.load_state_dict(state, strict=strict)
 
         if optimizer is not None and (ckpt_path / "optimizer.pt").exists():
-            optimizer.load_state_dict(
-                torch.load(ckpt_path / "optimizer.pt", map_location="cpu")
-            )
+            optimizer.load_state_dict(torch.load(ckpt_path / "optimizer.pt", map_location="cpu"))
 
         if scheduler is not None and (ckpt_path / "scheduler.pt").exists():
-            scheduler.load_state_dict(
-                torch.load(ckpt_path / "scheduler.pt", map_location="cpu")
-            )
+            scheduler.load_state_dict(torch.load(ckpt_path / "scheduler.pt", map_location="cpu"))
 
         meta = {}
         if (ckpt_path / "metadata.json").exists():
@@ -128,6 +118,7 @@ class CheckpointManager:
 
     def _remove_checkpoint(self, path: str):
         import shutil
+
         try:
             shutil.rmtree(path)
             logger.info(f"Removed old checkpoint: {path}")

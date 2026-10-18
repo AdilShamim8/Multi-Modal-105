@@ -35,13 +35,13 @@ def _build_parser() -> argparse.ArgumentParser:
     # ── train ──────────────────────────────────────────────────────────────
     p_train = sub.add_parser("train", help="launch a training plane")
     p_train.add_argument(
-        "--pipeline", required=True,
+        "--pipeline",
+        required=True,
         choices=["t2i", "t2v", "vae", "gan", "diffusion"],
     )
     p_train.add_argument("--config", required=True, help="YAML config path")
     p_train.add_argument("--resume", default=None, help="checkpoint to resume from")
-    p_train.add_argument("--override", nargs="*", default=[],
-                         help="key=value config overrides")
+    p_train.add_argument("--override", nargs="*", default=[], help="key=value config overrides")
 
     # ── generate ───────────────────────────────────────────────────────────
     p_gen = sub.add_parser("generate", help="one-off generation")
@@ -129,7 +129,7 @@ def _serve(args: argparse.Namespace) -> int:
         host=args.host or "0.0.0.0",
         port=args.port or 8000,
         reload=args.reload,  # dev only; ignored when workers > 1
-        access_log=False,    # platform middleware already logs requests
+        access_log=False,  # platform middleware already logs requests
     )
     return 0
 
@@ -146,7 +146,10 @@ def _worker(args: argparse.Namespace) -> int:
     engine = InferenceEngine(config)
     store = build_artifact_store(config)
     worker = GenerationWorker(
-        queue=queue, engine=engine, store=store, config=config,
+        queue=queue,
+        engine=engine,
+        store=store,
+        config=config,
         max_batch=args.max_batch,
     )
     if args.modality in ("video", "all"):
@@ -160,11 +163,36 @@ def _train(args: argparse.Namespace) -> int:
     from .utils.seeds import seed_everything
 
     mapping = {
-        "t2i": ("multimodal.config.t2i_config", "T2IConfig", "multimodal.training.t2i_trainer", "T2ITrainer"),
-        "t2v": ("multimodal.config.t2v_config", "T2VConfig", "multimodal.training.t2v_trainer", "T2VTrainer"),
-        "vae": ("multimodal.config.vae_config", "VAEConfig", "multimodal.training.vae_trainer", "VAETrainer"),
-        "gan": ("multimodal.config.gan_config", "GANConfig", "multimodal.training.gan_trainer", "GANTrainer"),
-        "diffusion": ("multimodal.config.diffusion_config", "DiffusionConfig", "multimodal.training.diffusion_trainer", "DiffusionTrainer"),
+        "t2i": (
+            "multimodal.config.t2i_config",
+            "T2IConfig",
+            "multimodal.training.t2i_trainer",
+            "T2ITrainer",
+        ),
+        "t2v": (
+            "multimodal.config.t2v_config",
+            "T2VConfig",
+            "multimodal.training.t2v_trainer",
+            "T2VTrainer",
+        ),
+        "vae": (
+            "multimodal.config.vae_config",
+            "VAEConfig",
+            "multimodal.training.vae_trainer",
+            "VAETrainer",
+        ),
+        "gan": (
+            "multimodal.config.gan_config",
+            "GANConfig",
+            "multimodal.training.gan_trainer",
+            "GANTrainer",
+        ),
+        "diffusion": (
+            "multimodal.config.diffusion_config",
+            "DiffusionConfig",
+            "multimodal.training.diffusion_trainer",
+            "DiffusionTrainer",
+        ),
     }
     cfg_mod, cfg_cls, trainer_mod, trainer_cls = mapping[args.pipeline]
     import importlib
@@ -175,8 +203,9 @@ def _train(args: argparse.Namespace) -> int:
     payload = load_config(args.config)
     config = to_dataclass(payload, cfg_type)
     seed_everything(config.seed)
-    trainer = trainer_type(config=config) if args.pipeline in ("vae",) else \
-        trainer_type(config=config)
+    trainer = (
+        trainer_type(config=config) if args.pipeline in ("vae",) else trainer_type(config=config)
+    )
     trainer.train()
     return 0
 
@@ -221,9 +250,7 @@ def _generate(args: argparse.Namespace) -> int:
 def _evaluate(args: argparse.Namespace) -> int:
     from .evaluation.evaluator import T2IEvaluator
 
-    evaluator = T2IEvaluator.from_folder(
-        args.samples_dir, reference_dir=args.reference_dir
-    )
+    evaluator = T2IEvaluator.from_folder(args.samples_dir, reference_dir=args.reference_dir)
     report = evaluator.evaluate_all(metrics=args.metrics)
     print(report)
     return 0

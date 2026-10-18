@@ -28,8 +28,8 @@ log = get_logger(__name__)
 
 @dataclass
 class GenerationOutput:
-    artifacts: list[bytes]        # encoded media (PNG bytes / MP4 bytes)
-    extensions: list[str]         # matching artifact extensions
+    artifacts: list[bytes]  # encoded media (PNG bytes / MP4 bytes)
+    extensions: list[str]  # matching artifact extensions
     seed_used: int
     duration_s: float
 
@@ -77,9 +77,7 @@ class InferenceEngine:
 
     def _load_t2v(self, path: str) -> Any:
         if not __import__("os").path.isdir(path):
-            raise ModelNotFoundError(
-                "T2V model directory missing", details={"path": path}
-            )
+            raise ModelNotFoundError("T2V model directory missing", details={"path": path})
         from ..agent.pipeline import T2VPipeline
 
         return T2VPipeline.from_pretrained(path, device=self.device)
@@ -92,15 +90,28 @@ class InferenceEngine:
                 continue
             started = time.perf_counter()
             try:
-                self._run(pipeline, modality, {
-                    "prompt": "warmup", "width": 64, "height": 64,
-                    "num_steps": 2, "num_outputs": 1, "guidance_scale": 1.0,
-                    "sampler": self.config.default_sampler, "num_frames": 4,
-                    "seed": 0,
-                })
-                log.info("warmup complete", extra={
-                    "modality": modality, "seconds": round(time.perf_counter() - started, 2),
-                })
+                self._run(
+                    pipeline,
+                    modality,
+                    {
+                        "prompt": "warmup",
+                        "width": 64,
+                        "height": 64,
+                        "num_steps": 2,
+                        "num_outputs": 1,
+                        "guidance_scale": 1.0,
+                        "sampler": self.config.default_sampler,
+                        "num_frames": 4,
+                        "seed": 0,
+                    },
+                )
+                log.info(
+                    "warmup complete",
+                    extra={
+                        "modality": modality,
+                        "seconds": round(time.perf_counter() - started, 2),
+                    },
+                )
             except Exception as exc:  # warmup failures are warnings, not fatal
                 log.warning("warmup failed", extra={"modality": modality, "error": str(exc)})
 
@@ -172,16 +183,17 @@ class InferenceEngine:
 
     @staticmethod
     def _run(pipeline: Any, modality: str, params: dict[str, Any]) -> list[bytes]:
-        result = pipeline(**params) if not hasattr(pipeline, "generate") else \
-            pipeline.generate(**params)
+        result = (
+            pipeline(**params) if not hasattr(pipeline, "generate") else pipeline.generate(**params)
+        )
         media = result.get("images", []) if isinstance(result, dict) else result
         encoded: list[bytes] = []
         for item in media:
-            if hasattr(item, "save"):                       # PIL image
+            if hasattr(item, "save"):  # PIL image
                 buf = io.BytesIO()
                 item.save(buf, format="PNG")
                 encoded.append(buf.getvalue())
-            elif isinstance(item, bytes | bytearray):        # pre-encoded video
+            elif isinstance(item, bytes | bytearray):  # pre-encoded video
                 encoded.append(bytes(item))
         if not encoded:
             from ..exceptions import GenerationError

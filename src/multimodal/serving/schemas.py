@@ -37,9 +37,7 @@ class GenerationRequest(BaseModel):
     )
     width: int = Field(default=512, ge=64, le=1024, multiple_of=8)
     height: int = Field(default=512, ge=64, le=1024, multiple_of=8)
-    num_frames: int = Field(
-        default=16, ge=1, le=64, description="Video only: frames per clip"
-    )
+    num_frames: int = Field(default=16, ge=1, le=64, description="Video only: frames per clip")
     num_steps: int = Field(default=30, ge=1, le=100)
     guidance_scale: float = Field(default=7.5, ge=0.0, le=30.0)
     sampler: Sampler = Sampler.DPM_PLUS_PLUS

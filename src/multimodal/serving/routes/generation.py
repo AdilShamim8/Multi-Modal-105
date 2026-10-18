@@ -107,7 +107,9 @@ def _sync_generate(app, job: GenerationJob):
             output: GenerationOutput = app.state.engine.execute(job)
             keys = [
                 app.state.store.save(job.job_id, f"out-{i}", media, ext)
-                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions, strict=True))
+                for i, (media, ext) in enumerate(
+                    zip(output.artifacts, output.extensions, strict=True)
+                )
             ]
             job.artifact_keys = keys
             job.seed = output.seed_used
@@ -134,8 +136,10 @@ def _sync_generate(app, job: GenerationJob):
         return JSONResponse(
             status_code=status.HTTP_202_ACCEPTED,
             content={
-                "job_id": job.job_id, "status": "queued",
-                "created_at": job.created_at, "accepted_at": time.time(),
+                "job_id": job.job_id,
+                "status": "queued",
+                "created_at": job.created_at,
+                "accepted_at": time.time(),
                 "detail": "sync timeout exceeded — job queued",
                 "links": {"status": f"{base}/{job.job_id}"},
             },
@@ -143,16 +147,13 @@ def _sync_generate(app, job: GenerationJob):
     if "error" in result:
         exc = result["error"]
         code = getattr(exc, "http_status", 500)
-        return JSONResponse(
-            status_code=code, content=getattr(exc, "to_dict", lambda: str(exc))()
-        )
+        return JSONResponse(status_code=code, content=getattr(exc, "to_dict", lambda: str(exc))())
     output: GenerationOutput = result["output"]  # type: ignore[assignment]
     return SyncGenerationOut(
         job_id=job.job_id,
         status=job.status.value,
         artifacts=[
-            ArtifactOut(kind="image", url=app.state.store.resolve(key))
-            for key in job.artifact_keys
+            ArtifactOut(kind="image", url=app.state.store.resolve(key)) for key in job.artifact_keys
         ],
         seed_used=output.seed_used,
         duration_s=output.duration_s,
@@ -204,9 +205,11 @@ async def cancel_generation(job_id: str, request: Request) -> JSONResponse:
         return JSONResponse(content={"job_id": job.job_id, "status": job.status.value})
     return JSONResponse(
         status_code=409,
-        content={"code": "not_cancellable",
-                 "message": f"job is {job.status.value}; only queued jobs can be cancelled",
-                 "details": {}},
+        content={
+            "code": "not_cancellable",
+            "message": f"job is {job.status.value}; only queued jobs can be cancelled",
+            "details": {},
+        },
     )
 
 

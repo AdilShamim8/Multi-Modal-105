@@ -57,9 +57,7 @@ class ModerationGate:
         self.enabled = enabled
         self.mode = mode
         self.max_prompt_chars = max_prompt_chars
-        self._patterns = [
-            re.compile(p, re.IGNORECASE) for p in (patterns or _DEFAULT_PATTERNS)
-        ]
+        self._patterns = [re.compile(p, re.IGNORECASE) for p in (patterns or _DEFAULT_PATTERNS)]
         self._classifier: ClassifierHook | None = None
         self._rejected_total = 0
 
@@ -93,9 +91,12 @@ class ModerationGate:
         """Raise SafetyError when the prompt must not be queued."""
         verdict = self.check(prompt)
         if not verdict.allowed:
-            raise SafetyError(verdict.reason or "prompt rejected", details={
-                "score": verdict.score,
-            })
+            raise SafetyError(
+                verdict.reason or "prompt rejected",
+                details={
+                    "score": verdict.score,
+                },
+            )
 
     def rejected_total(self) -> int:
         return self._rejected_total

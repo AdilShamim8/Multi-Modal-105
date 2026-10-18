@@ -64,7 +64,7 @@ class LatentCacheBuilder:
             images = batch["image"].to(self.device)
 
             # VAE encode
-            latents = self.vae.encode_to_latent(images)   # (B, 4, H/8, W/8)
+            latents = self.vae.encode_to_latent(images)  # (B, 4, H/8, W/8)
             latents = latents.cpu().numpy().astype(np.float16)
 
             # Save per-sample
@@ -158,6 +158,7 @@ def build_dataloader(
     sampler = None
     if distributed:
         from torch.utils.data.distributed import DistributedSampler
+
         sampler = DistributedSampler(dataset, shuffle=shuffle)
         shuffle = False
 

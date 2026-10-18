@@ -64,10 +64,20 @@ class TestCliParser:
         assert expected in values.values()
 
     def test_generate_flags(self):
-        args = _build_parser().parse_args([
-            "generate", "p", "--steps", "12", "--sampler", "ddim",
-            "--outputs", "2", "--seed", "7",
-        ])
+        args = _build_parser().parse_args(
+            [
+                "generate",
+                "p",
+                "--steps",
+                "12",
+                "--sampler",
+                "ddim",
+                "--outputs",
+                "2",
+                "--seed",
+                "7",
+            ]
+        )
         assert (args.steps, args.sampler, args.outputs, args.seed) == (12, "ddim", 2, 7)
 
     def test_invalid_pipeline_rejected(self):

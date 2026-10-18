@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class LargeScaleT2VTrainer:
     """
     Production Text-to-Video Diffusion Trainer.
-    
+
     Addresses large-scale training challenges:
     1. Gradient checkpointing for memory efficiency
     2. Sequence parallelism (for very long video sequences)
@@ -112,9 +112,7 @@ class LargeScaleT2VTrainer:
             self.optimizer,
             self.train_loader,
             self.lr_scheduler,
-        ) = self.accelerator.prepare(
-            model, self.optimizer, train_loader, self.lr_scheduler
-        )
+        ) = self.accelerator.prepare(model, self.optimizer, train_loader, self.lr_scheduler)
 
         self.val_loader = val_loader
 
@@ -202,12 +200,10 @@ class LargeScaleT2VTrainer:
         if temporal_only:
             # Phase 1: train only temporal attention
             temporal_params = [
-                p for n, p in model.named_parameters()
-                if "temporal" in n and p.requires_grad
+                p for n, p in model.named_parameters() if "temporal" in n and p.requires_grad
             ]
             spatial_params = [
-                p for n, p in model.named_parameters()
-                if "temporal" not in n and p.requires_grad
+                p for n, p in model.named_parameters() if "temporal" not in n and p.requires_grad
             ]
             param_groups = [
                 {"params": temporal_params, "lr": config.optimizer.learning_rate},
@@ -249,10 +245,7 @@ class LargeScaleT2VTrainer:
             if step < warmup:
                 return float(step) / max(1, warmup)
             progress = (step - warmup) / max(1, total - warmup)
-            return max(
-                config.optimizer.min_lr_ratio,
-                0.5 * (1.0 + math.cos(math.pi * progress))
-            )
+            return max(config.optimizer.min_lr_ratio, 0.5 * (1.0 + math.cos(math.pi * progress)))
 
         return LambdaLR(optimizer, lr_fn)
 
@@ -291,9 +284,7 @@ class LargeScaleT2VTrainer:
             text_embeds[drop] = 0.0
         return text_embeds
 
-    def train_step(
-        self, batch: dict[str, torch.Tensor]
-    ) -> dict[str, float] | None:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float] | None:
         self.model.train()
 
         with self.accelerator.accumulate(self.model):
@@ -414,7 +405,8 @@ class LargeScaleT2VTrainer:
 
             def model_fn(x, t, **kwargs):
                 return unwrapped.forward_with_cfg(
-                    x, t,
+                    x,
+                    t,
                     text_embeds=text_embeds,
                     text_pool=text_pool,
                     null_text_embeds=null_text,
@@ -429,8 +421,11 @@ class LargeScaleT2VTrainer:
             x0_pred = self.scheduler.get_x0_prediction(model_out, latents, t_batch)
             x0_pred = x0_pred.clamp(-1.0, 1.0)
 
-            t_prev = self.scheduler.timesteps[i + 1] if i < len(self.scheduler.timesteps) - 1 \
-                     else torch.zeros(1, device=self.device)
+            t_prev = (
+                self.scheduler.timesteps[i + 1]
+                if i < len(self.scheduler.timesteps) - 1
+                else torch.zeros(1, device=self.device)
+            )
             t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
 
             alpha_prev = self.scheduler.alphas_cumprod[t_prev_val].to(self.device)

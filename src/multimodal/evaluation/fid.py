@@ -21,6 +21,7 @@ class InceptionV3Features(nn.Module):
     def __init__(self, device: str = "cuda"):
         super().__init__()
         from torchvision.models import Inception_V3_Weights, inception_v3
+
         self.device = device
 
         inception = inception_v3(weights=Inception_V3_Weights.IMAGENET1K_V1)
@@ -33,10 +34,17 @@ class InceptionV3Features(nn.Module):
             inception.Conv2d_3b_1x1,
             inception.Conv2d_4a_3x3,
             nn.MaxPool2d(3, 2),
-            inception.Mixed_5b, inception.Mixed_5c, inception.Mixed_5d,
-            inception.Mixed_6a, inception.Mixed_6b, inception.Mixed_6c,
-            inception.Mixed_6d, inception.Mixed_6e,
-            inception.Mixed_7a, inception.Mixed_7b, inception.Mixed_7c,
+            inception.Mixed_5b,
+            inception.Mixed_5c,
+            inception.Mixed_5d,
+            inception.Mixed_6a,
+            inception.Mixed_6b,
+            inception.Mixed_6c,
+            inception.Mixed_6d,
+            inception.Mixed_6e,
+            inception.Mixed_7a,
+            inception.Mixed_7b,
+            inception.Mixed_7c,
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
         )
@@ -45,12 +53,14 @@ class InceptionV3Features(nn.Module):
         for p in self.features.parameters():
             p.requires_grad_(False)
 
-        self.transform = transforms.Compose([
-            transforms.Resize(299),
-            transforms.CenterCrop(299),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        ])
+        self.transform = transforms.Compose(
+            [
+                transforms.Resize(299),
+                transforms.CenterCrop(299),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        )
 
     @torch.no_grad()
     def extract_features(self, images: torch.Tensor) -> np.ndarray:
@@ -184,9 +194,7 @@ class FIDEvaluator:
             return data["mu"], data["sigma"]
 
         logger.info("Computing real data FID statistics...")
-        mu, sigma = self.inception.compute_stats(
-            self.real_dataloader, self.max_real_samples
-        )
+        mu, sigma = self.inception.compute_stats(self.real_dataloader, self.max_real_samples)
         np.savez(stats_file, mu=mu, sigma=sigma)
         logger.info("Real FID stats cached")
         return mu, sigma
@@ -194,7 +202,7 @@ class FIDEvaluator:
     @torch.no_grad()
     def compute_fid_from_generator(
         self,
-        generator_fn,     # callable: (batch_size) → torch.Tensor (B, 3, H, W)
+        generator_fn,  # callable: (batch_size) → torch.Tensor (B, 3, H, W)
         batch_size: int = 32,
         num_samples: int | None = None,
     ) -> float:

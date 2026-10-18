@@ -24,8 +24,10 @@ class OomPipeline:
 
     def generate(self, **params):
         self.calls.append(dict(params))
-        if params["num_outputs"] > self.fail_until_outputs or \
-                params["num_steps"] > self.fail_until_steps:
+        if (
+            params["num_outputs"] > self.fail_until_outputs
+            or params["num_steps"] > self.fail_until_steps
+        ):
             raise RuntimeError("CUDA out of memory. Tried to allocate 2.00 GiB")
         from PIL import Image
 

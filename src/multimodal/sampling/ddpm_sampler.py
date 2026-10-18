@@ -46,6 +46,7 @@ class DDPMSampler:
         do_cfg = guidance_scale > 1.0
 
         from tqdm import tqdm
+
         pbar = tqdm(timesteps, desc="DDPM sampling") if show_progress else timesteps
 
         for i, t in enumerate(pbar):

@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -32,9 +31,7 @@ class VectorQuantizer(nn.Module):
             self.register_buffer("ema_w", self.embedding.weight.data.clone())
             self.ema_decay = ema_decay
 
-    def forward(
-        self, z: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             z: (B, D, H, W) continuous embeddings
@@ -53,9 +50,9 @@ class VectorQuantizer(nn.Module):
             + self.embedding.weight.pow(2).sum(1)
         )  # (N, K)
 
-        encoding_indices = distances.argmin(dim=1)         # (N,)
+        encoding_indices = distances.argmin(dim=1)  # (N,)
         encodings = F.one_hot(encoding_indices, self.num_embeddings).float()
-        z_q_flat = self.embedding(encoding_indices)         # (N, D)
+        z_q_flat = self.embedding(encoding_indices)  # (N, D)
 
         # EMA codebook update
         if self.use_ema and self.training:
@@ -63,15 +60,10 @@ class VectorQuantizer(nn.Module):
                 self.ema_cluster_size.mul_(self.ema_decay).add_(
                     encodings.sum(0), alpha=1 - self.ema_decay
                 )
-                dw = encodings.T @ z_flat                  # (K, D)
-                self.ema_w.mul_(self.ema_decay).add_(
-                    dw, alpha=1 - self.ema_decay
-                )
+                dw = encodings.T @ z_flat  # (K, D)
+                self.ema_w.mul_(self.ema_decay).add_(dw, alpha=1 - self.ema_decay)
                 n = self.ema_cluster_size.sum()
-                cluster_size = (
-                    (self.ema_cluster_size + 1e-5)
-                    / (n + self.num_embeddings * 1e-5) * n
-                )
+                cluster_size = (self.ema_cluster_size + 1e-5) / (n + self.num_embeddings * 1e-5) * n
                 self.embedding.weight.data.copy_(self.ema_w / cluster_size.unsqueeze(1))
 
         z_q = rearrange(z_q_flat, "(b h w) d -> b d h w", b=B, h=H, w=W)
@@ -83,10 +75,7 @@ class VectorQuantizer(nn.Module):
         if self.use_ema:
             loss = self.commitment_cost * F.mse_loss(z_q.detach(), z)
         else:
-            loss = (
-                F.mse_loss(z_q.detach(), z)
-                + self.commitment_cost * F.mse_loss(z_q, z.detach())
-            )
+            loss = F.mse_loss(z_q.detach(), z) + self.commitment_cost * F.mse_loss(z_q, z.detach())
 
         return z_q_st, loss, encoding_indices.view(B, H * W)
 

@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 
@@ -25,9 +24,9 @@ class DiagonalGaussian(nn.Module):
 
     def kl(self) -> torch.Tensor:
         """KL divergence to standard normal N(0, I)."""
-        return 0.5 * (
-            self.mu.pow(2) + self.logvar.exp() - 1.0 - self.logvar
-        ).sum(dim=[1, 2, 3]).mean()
+        return (
+            0.5 * (self.mu.pow(2) + self.logvar.exp() - 1.0 - self.logvar).sum(dim=[1, 2, 3]).mean()
+        )
 
 
 class AutoencoderKL(nn.Module):
@@ -40,13 +39,13 @@ class AutoencoderKL(nn.Module):
         super().__init__()
 
         # Pull params from kwargs (config accepted for API compatibility)
-        in_channels      = kwargs.get("in_channels", 3)
-        latent_channels  = kwargs.get("latent_channels", 4)
-        base_channels    = kwargs.get("base_channels", 128)
-        ch_mult          = kwargs.get("channel_multipliers", (1, 2, 4, 8))
-        num_res_blocks   = kwargs.get("num_res_blocks", 2)
-        attn_res         = kwargs.get("attention_resolutions", (16,))
-        dropout          = kwargs.get("dropout", 0.0)
+        in_channels = kwargs.get("in_channels", 3)
+        latent_channels = kwargs.get("latent_channels", 4)
+        base_channels = kwargs.get("base_channels", 128)
+        ch_mult = kwargs.get("channel_multipliers", (1, 2, 4, 8))
+        num_res_blocks = kwargs.get("num_res_blocks", 2)
+        attn_res = kwargs.get("attention_resolutions", (16,))
+        dropout = kwargs.get("dropout", 0.0)
 
         self.encoder = Encoder(
             in_channels=in_channels,

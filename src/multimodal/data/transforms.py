@@ -96,10 +96,7 @@ class ResolutionBucketTransform:
     def find_bucket(self, w: int, h: int) -> tuple[int, int]:
         """Find best matching bucket for given image dimensions."""
         aspect = w / h
-        best_bucket = min(
-            self.buckets,
-            key=lambda b: abs(b[0] / b[1] - aspect)
-        )
+        best_bucket = min(self.buckets, key=lambda b: abs(b[0] / b[1] - aspect))
         return best_bucket
 
     def __call__(self, image: Image.Image) -> tuple[torch.Tensor, tuple[int, int]]:
@@ -140,9 +137,7 @@ class AugmentationPipeline:
         blur_prob: float = 0.05,
         grayscale_prob: float = 0.02,
     ):
-        self.color_jitter = T.ColorJitter(
-            brightness=0.1, contrast=0.1, saturation=0.1, hue=0.05
-        )
+        self.color_jitter = T.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.05)
         self.blur = T.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0))
         self.color_jitter_prob = color_jitter_prob
         self.blur_prob = blur_prob

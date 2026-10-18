@@ -104,8 +104,11 @@ def export_checkpoint(
     (model_dir / "bundle.json").write_text(json.dumps(manifest, indent=2))
     log.info(
         "export complete",
-        extra={"fmt": fmt, "seconds": round(time.perf_counter() - started, 2),
-               "bytes": manifest["bytes"]},
+        extra={
+            "fmt": fmt,
+            "seconds": round(time.perf_counter() - started, 2),
+            "bytes": manifest["bytes"],
+        },
     )
     return out_path
 
@@ -144,7 +147,10 @@ def read_manifest(model_dir: Path) -> dict[str, Any]:
         if actual != manifest.get("sha256"):
             raise CheckpointError(
                 "artifact checksum mismatch — possible corruption",
-                details={"artifact": str(artifact), "expected": manifest.get("sha256"),
-                         "actual": actual},
+                details={
+                    "artifact": str(artifact),
+                    "expected": manifest.get("sha256"),
+                    "actual": actual,
+                },
             )
     return manifest

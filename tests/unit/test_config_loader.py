@@ -23,7 +23,10 @@ class TestEnvInterpolation:
 
     def test_env_wins_over_default(self, monkeypatch):
         monkeypatch.setenv("MM_TEST_VAL", "from-env")
-        assert interpolate_env({"v": "${MM_TEST_VAR:default}"}) .get("v", "from-env") == "from-env" or True
+        assert (
+            interpolate_env({"v": "${MM_TEST_VAR:default}"}).get("v", "from-env") == "from-env"
+            or True
+        )
         out = interpolate_env({"v": "${MM_TEST_VAL:default}"})
         assert out["v"] == "from-env"
 
@@ -66,6 +69,6 @@ class TestInheritanceChain:
         from multimodal.config.t2i_config import T2IConfig
 
         cfg = to_dataclass(load_config("configs/t2i/dit_base.yaml"), T2IConfig)
-        assert cfg.seed == 42                     # from base.yaml
-        assert cfg.dit_depth == 28                # from dit_base.yaml
-        assert cfg.resolution == 512              # dit_base overrides base
+        assert cfg.seed == 42  # from base.yaml
+        assert cfg.dit_depth == 28  # from dit_base.yaml
+        assert cfg.resolution == 512  # dit_base overrides base

@@ -31,10 +31,10 @@ class GANConfig(BaseConfig):
     mbstd_group_size: int = 4
 
     # ── Adversarial objective ─────────────────────────────────────────────
-    loss_type: str = "softplus"      # "softplus" | "hinge" | "wgan-gp"
-    r1_gamma: float = 10.0           # R1 lazy regularization strength
-    lazy_reg_interval: int = 16      # apply R1 every N critic steps
-    gp_lambda: float = 10.0          # only used when loss_type == "wgan-gp"
+    loss_type: str = "softplus"  # "softplus" | "hinge" | "wgan-gp"
+    r1_gamma: float = 10.0  # R1 lazy regularization strength
+    lazy_reg_interval: int = 16  # apply R1 every N critic steps
+    gp_lambda: float = 10.0  # only used when loss_type == "wgan-gp"
 
     # ── Optimization (StyleGAN2 defaults) ─────────────────────────────────
     batch_size: int = 32
@@ -45,8 +45,8 @@ class GANConfig(BaseConfig):
     beta2: float = 0.99
 
     # ── Stability ─────────────────────────────────────────────────────────
-    ema_beta: float = 0.999          # generator weight EMA for evaluation
-    style_mixing_prob: float = 0.9   # path regularization via style mixing
+    ema_beta: float = 0.999  # generator weight EMA for evaluation
+    style_mixing_prob: float = 0.9  # path regularization via style mixing
     num_train_steps: int = 2_000_000
 
     optimizer: OptimizerConfig = None
@@ -54,9 +54,7 @@ class GANConfig(BaseConfig):
     def __post_init__(self):
         super().__post_init__()
         if self.loss_type not in ("softplus", "hinge", "wgan-gp"):
-            raise ValueError(
-                f"loss_type must be softplus|hinge|wgan-gp, got '{self.loss_type}'"
-            )
+            raise ValueError(f"loss_type must be softplus|hinge|wgan-gp, got '{self.loss_type}'")
         if self.img_resolution & (self.img_resolution - 1) != 0:
             raise ValueError("img_resolution must be a power of two")
         if self.optimizer is None:

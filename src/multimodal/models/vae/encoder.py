@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -38,7 +37,7 @@ class AttentionBlock(nn.Module):
         self.head_dim = channels // num_heads
         self.qkv = nn.Conv2d(channels, 3 * channels, 1)
         self.proj = nn.Conv2d(channels, channels, 1)
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
@@ -48,15 +47,15 @@ class AttentionBlock(nn.Module):
 
         # Reshape for multi-head attention
         def reshape(t):
-            return rearrange(t, "b (nh hd) h w -> b nh (h w) hd",
-                             nh=self.num_heads, hd=self.head_dim)
+            return rearrange(
+                t, "b (nh hd) h w -> b nh (h w) hd", nh=self.num_heads, hd=self.head_dim
+            )
 
         q, k, v = reshape(q), reshape(k), reshape(v)
 
         # Scaled dot-product attention (Flash Attention when available)
         attn_out = F.scaled_dot_product_attention(q, k, v, scale=self.scale)
-        attn_out = rearrange(attn_out, "b nh (h w) hd -> b (nh hd) h w",
-                             h=H, w=W)
+        attn_out = rearrange(attn_out, "b nh (h w) hd -> b (nh hd) h w", h=H, w=W)
         return x + self.proj(attn_out)
 
 
@@ -85,7 +84,7 @@ class Encoder(nn.Module):
         num_res_blocks: int = 2,
         attention_resolutions: tuple[int, ...] = (16,),
         dropout: float = 0.0,
-        double_z: bool = True,                # output mu + logvar
+        double_z: bool = True,  # output mu + logvar
     ):
         super().__init__()
         self.latent_channels = latent_channels
@@ -134,4 +133,4 @@ class Encoder(nn.Module):
 
         h = self.act(self.norm_out(h))
         h = self.conv_out(h)
-        return h                   # (B, 2*latent_channels, H/f, W/f)
+        return h  # (B, 2*latent_channels, H/f, W/f)

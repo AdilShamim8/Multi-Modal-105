@@ -12,16 +12,16 @@ from multimodal.models.diffusion.dit import DiT, DiTBlock, EMAModel
 def tiny_dit():
     torch.manual_seed(0)
     return DiT(
-        input_size=8,          # 8x8 latent (64px image through the VAE)
+        input_size=8,  # 8x8 latent (64px image through the VAE)
         patch_size=2,
         in_channels=4,
         hidden_size=64,
         depth=2,
         num_heads=4,
         num_classes=10,
-        context_dim=32,        # text-conditional mode
+        context_dim=32,  # text-conditional mode
         class_dropout_prob=0.0,
-        learn_sigma=False,     # out_channels == in_channels: simplest contract
+        learn_sigma=False,  # out_channels == in_channels: simplest contract
     )
 
 
@@ -42,8 +42,14 @@ class TestForward:
     def test_learn_sigma_doubles_output_channels(self):
         torch.manual_seed(0)
         dit = DiT(
-            input_size=8, patch_size=2, in_channels=4, hidden_size=64,
-            depth=1, num_heads=4, num_classes=10, context_dim=None,
+            input_size=8,
+            patch_size=2,
+            in_channels=4,
+            hidden_size=64,
+            depth=1,
+            num_heads=4,
+            num_classes=10,
+            context_dim=None,
             learn_sigma=True,
         )
         out = dit(torch.randn(1, 4, 8, 8), torch.zeros(1, dtype=torch.long))
@@ -100,8 +106,11 @@ class TestEMA:
     def test_ema_shadow_converges_to_weights(self):
         torch.manual_seed(0)
         model = torch.nn.Linear(4, 4)
-        ema = EMAModel(model, decay=0.9) if EMAModel.__init__.__code__.co_varnames[:3] != (
-                "self", "model", "decay") else EMAModel(model, decay=0.9)
+        ema = (
+            EMAModel(model, decay=0.9)
+            if EMAModel.__init__.__code__.co_varnames[:3] != ("self", "model", "decay")
+            else EMAModel(model, decay=0.9)
+        )
         for _ in range(200):
             with torch.no_grad():
                 model.weight += 0.01

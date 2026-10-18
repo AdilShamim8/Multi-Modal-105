@@ -31,6 +31,7 @@ _ENV_PATTERN = re.compile(r"\$\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?::(?P<default>
 def interpolate_env(value: Any) -> Any:
     """Recursively substitute ``${VAR}`` and ``${VAR:default}`` in strings."""
     if isinstance(value, str):
+
         def repl(match: re.Match[str]) -> str:
             env_val = os.getenv(match.group("name"))
             if env_val is not None:
@@ -85,9 +86,7 @@ def load_config(path: str | Path, base_dir: str | Path | None = None) -> dict[st
             base_dir = Path(path).parent
         base_path = Path(base_dir) / base_rel
         if not base_path.exists():
-            raise ConfigError(
-                "__base__ target not found", details={"base": str(base_path)}
-            )
+            raise ConfigError("__base__ target not found", details={"base": str(base_path)})
         base = load_config(base_path, base_dir=base_dir)  # recursive inheritance
         data = deep_merge(base, data)
     return data

@@ -34,7 +34,9 @@ class LocalArtifactStore:
         try:
             self.root.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
-            raise ArtifactError(f"cannot create artifact dir {root}", details={"error": str(exc)}) from exc
+            raise ArtifactError(
+                f"cannot create artifact dir {root}", details={"error": str(exc)}
+            ) from exc
 
     def save(self, job_id: str, kind: str, data: bytes, ext: str = "png") -> str:
         digest = hashlib.sha256(data).hexdigest()[:16]
@@ -42,7 +44,7 @@ class LocalArtifactStore:
         path = self.root / key
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
-        tmp.write_bytes(data)          # atomic-ish: write then rename
+        tmp.write_bytes(data)  # atomic-ish: write then rename
         tmp.replace(path)
         log.info("artifact saved", extra={"key": key, "bytes": len(data)})
         return key

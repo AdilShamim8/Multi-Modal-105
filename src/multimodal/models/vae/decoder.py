@@ -1,4 +1,3 @@
-
 import torch
 import torch.nn as nn
 
@@ -74,4 +73,4 @@ class Decoder(nn.Module):
 
         h = self.act(self.norm_out(h))
         h = self.conv_out(h)
-        return torch.tanh(h)       # (B, 3, H, W) in [-1, 1]
+        return torch.tanh(h)  # (B, 3, H, W) in [-1, 1]

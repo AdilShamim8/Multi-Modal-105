@@ -16,9 +16,6 @@ RELEASE_DATE = "2026-10-18"
 VERSION_TUPLE = (1, 0, 0)
 
 #: User-agent fragment reported by HTTP clients of this platform.
-USER_AGENT = (
-    f"multimodal-agent/{__version__} "
-    "(+https://github.com/AdilShamim8/Multi-Modal-105)"
-)
+USER_AGENT = f"multimodal-agent/{__version__} " "(+https://github.com/AdilShamim8/Multi-Modal-105)"
 
 __all__ = ["__version__", "RELEASE_DATE", "VERSION_TUPLE", "USER_AGENT"]

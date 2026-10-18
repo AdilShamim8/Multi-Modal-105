@@ -26,7 +26,7 @@ class DPMSolver:
         # Precompute lambda(t) = log(alpha_t) - log(sigma_t)
         log_alpha = 0.5 * torch.log(self.scheduler.alphas_cumprod)
         log_sigma = 0.5 * torch.log(1.0 - self.scheduler.alphas_cumprod)
-        self.lambdas = log_alpha - log_sigma       # (T,)
+        self.lambdas = log_alpha - log_sigma  # (T,)
 
     def _sigma(self, t_idx: torch.Tensor) -> torch.Tensor:
         return (1.0 - self.scheduler.alphas_cumprod[t_idx]).sqrt()
@@ -89,8 +89,12 @@ class DPMSolver:
         t_prev_list: list[int] = []
 
         from tqdm import tqdm
-        pbar = tqdm(range(len(timesteps)), desc=f"DPM-Solver++ ({num_inference_steps} steps)") \
-               if show_progress else range(len(timesteps))
+
+        pbar = (
+            tqdm(range(len(timesteps)), desc=f"DPM-Solver++ ({num_inference_steps} steps)")
+            if show_progress
+            else range(len(timesteps))
+        )
 
         for step_idx in pbar:
             t_cur = timesteps[step_idx]
@@ -200,9 +204,7 @@ class DPMSolver:
         phi1 = torch.expm1(torch.tensor(-h, device=device))
 
         return (
-            (sigma_prev / sigma_t_cur) * x
-            - alpha_prev * phi1 * D0
-            - 0.5 * alpha_prev * phi1 * D1
+            (sigma_prev / sigma_t_cur) * x - alpha_prev * phi1 * D0 - 0.5 * alpha_prev * phi1 * D1
         )
 
     def _dpm_solver_third_order(
@@ -215,9 +217,7 @@ class DPMSolver:
         device: torch.device,
     ) -> torch.Tensor:
         # Fallback to second order if not enough history
-        return self._dpm_solver_second_order(
-            x, model_prev_list, t_prev_list, t, t_prev, device
-        )
+        return self._dpm_solver_second_order(x, model_prev_list, t_prev_list, t, t_prev, device)
 
     def _double_cond(self, cond: dict, batch_size: int) -> dict:
         doubled = {}

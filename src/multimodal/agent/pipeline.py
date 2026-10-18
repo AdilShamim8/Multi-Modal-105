@@ -29,7 +29,7 @@ class T2IPipeline:
         text_encoder: CLIPTextEncoder,
         scheduler: NoiseScheduler,
         device: str = "cuda",
-        sampler: str = "dpm++",         # "ddpm" | "ddim" | "dpm++"
+        sampler: str = "dpm++",  # "ddpm" | "ddim" | "dpm++"
         default_num_steps: int = 30,
         default_guidance_scale: float = 7.5,
     ):
@@ -124,21 +124,19 @@ class T2IPipeline:
             shape=shape,
             device=self.device,
             num_inference_steps=num_steps,
-            guidance_scale=1.0,       # CFG is handled by model_with_cfg
+            guidance_scale=1.0,  # CFG is handled by model_with_cfg
             show_progress=True,
             latents=latents,
         )
 
         # Decode
         images_tensor = self.vae.decode_from_latent(denoised_latents)
-        images_tensor = (images_tensor.clamp(-1, 1) + 1) / 2.0   # [0, 1]
+        images_tensor = (images_tensor.clamp(-1, 1) + 1) / 2.0  # [0, 1]
 
         # Convert to PIL
         pil_images = []
         for i in range(B):
-            arr = (
-                images_tensor[i].permute(1, 2, 0).cpu().numpy() * 255
-            ).astype(np.uint8)
+            arr = (images_tensor[i].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
             pil_images.append(Image.fromarray(arr))
 
         result = {"images": pil_images}
@@ -170,7 +168,8 @@ class T2IPipeline:
         if isinstance(init_image, Image.Image):
             init_image = init_image.convert("RGB").resize((512, 512), Image.LANCZOS)
             import torchvision.transforms as T
-            t = T.Compose([T.ToTensor(), T.Normalize([0.5]*3, [0.5]*3)])
+
+            t = T.Compose([T.ToTensor(), T.Normalize([0.5] * 3, [0.5] * 3)])
             init_tensor = t(init_image).unsqueeze(0).to(self.device)
         else:
             init_tensor = init_image.to(self.device)

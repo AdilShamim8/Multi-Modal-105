@@ -68,9 +68,8 @@ class MetricLogger:
         # TensorBoard
         try:
             from torch.utils.tensorboard import SummaryWriter
-            self.tb_writer = SummaryWriter(
-                log_dir=os.path.join(output_dir, "tensorboard")
-            )
+
+            self.tb_writer = SummaryWriter(log_dir=os.path.join(output_dir, "tensorboard"))
         except ImportError:
             self.tb_writer = None
 
@@ -84,8 +83,7 @@ class MetricLogger:
                     self.tb_writer.add_scalar(k, v, step)
         # Console log
         msg = " | ".join(
-            f"{k}: {v:.4f}" if isinstance(v, float) else f"{k}: {v}"
-            for k, v in metrics.items()
+            f"{k}: {v:.4f}" if isinstance(v, float) else f"{k}: {v}" for k, v in metrics.items()
         )
         self.logger.info(f"[Step {step}] {msg}")
 

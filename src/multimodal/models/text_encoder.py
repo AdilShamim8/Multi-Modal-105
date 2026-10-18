@@ -78,7 +78,7 @@ class CLIPTextEncoder(nn.Module):
         )
         if self.use_penultimate_layer:
             # SD uses second-to-last hidden state
-            return out.hidden_states[-2]      # (B, 77, 768)
+            return out.hidden_states[-2]  # (B, 77, 768)
         return out.last_hidden_state
 
     def forward(
@@ -130,12 +130,12 @@ class DualTextEncoder(nn.Module):
             prompt_embeds: (B, 77, 2048) concatenated sequence embeddings
             pooled_embeds: (B, 1280) pooled from encoder2 for time conditioning
         """
-        emb1 = self.encoder1(input_ids1, mask1)      # (B, 77, 768)
-        emb2 = self.encoder2(input_ids2, mask2)      # (B, 77, 1280)
+        emb1 = self.encoder1(input_ids1, mask1)  # (B, 77, 768)
+        emb2 = self.encoder2(input_ids2, mask2)  # (B, 77, 1280)
         prompt_embeds = torch.cat([emb1, emb2], dim=-1)  # (B, 77, 2048)
 
         # Pooled: mean of non-padding tokens from encoder2
-        pooled = emb2.mean(dim=1)                    # (B, 1280)
+        pooled = emb2.mean(dim=1)  # (B, 1280)
         return prompt_embeds, pooled
 
 
@@ -183,4 +183,4 @@ class T5TextEncoder(nn.Module):
             input_ids=input_ids,
             attention_mask=attention_mask,
         )
-        return out.last_hidden_state    # (B, seq_len, embed_dim)
+        return out.last_hidden_state  # (B, seq_len, embed_dim)

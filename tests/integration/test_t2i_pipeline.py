@@ -28,8 +28,14 @@ def tiny_stack():
         latent_channels=4,
     ).eval()
     dit = DiT(
-        input_size=8, patch_size=2, in_channels=4, hidden_size=64,
-        depth=2, num_heads=4, num_classes=10, context_dim=32,
+        input_size=8,
+        patch_size=2,
+        in_channels=4,
+        hidden_size=64,
+        depth=2,
+        num_heads=4,
+        num_classes=10,
+        context_dim=32,
         learn_sigma=False,
     ).eval()
     scheduler = NoiseScheduler(prediction_type="epsilon")
@@ -53,8 +59,11 @@ class TestEndToEndGeneration:
             return dit(x, t, text_embeds=ctx.expand(x.shape[0], -1, -1))
 
         latents = sampler.sample(
-            model_fn, (1, 4, 8, 8), "cpu",
-            num_inference_steps=4, show_progress=False,
+            model_fn,
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=4,
+            show_progress=False,
         )
         assert latents.shape == (1, 4, 8, 8)
         assert torch.isfinite(latents).all()
@@ -73,11 +82,13 @@ class TestEndToEndGeneration:
             return dit(x, t, text_embeds=ctx.expand(x.shape[0], -1, -1))
 
         torch.manual_seed(7)
-        a = sampler.sample(model_fn, (1, 4, 8, 8), "cpu",
-                           num_inference_steps=4, show_progress=False)
+        a = sampler.sample(
+            model_fn, (1, 4, 8, 8), "cpu", num_inference_steps=4, show_progress=False
+        )
         torch.manual_seed(7)
-        b = sampler.sample(model_fn, (1, 4, 8, 8), "cpu",
-                           num_inference_steps=4, show_progress=False)
+        b = sampler.sample(
+            model_fn, (1, 4, 8, 8), "cpu", num_inference_steps=4, show_progress=False
+        )
         assert torch.equal(a, b), "same seed must give byte-identical latents"
 
     def test_different_prompts_diverge(self, tiny_stack):
@@ -92,9 +103,11 @@ class TestEndToEndGeneration:
                 return dit(x, t, text_embeds=ctx.expand(x.shape[0], -1, -1))
 
             torch.manual_seed(3)
-            outputs.append(sampler.sample(model_fn, (1, 4, 8, 8), "cpu",
-                                          num_inference_steps=4,
-                                          show_progress=False))
+            outputs.append(
+                sampler.sample(
+                    model_fn, (1, 4, 8, 8), "cpu", num_inference_steps=4, show_progress=False
+                )
+            )
         assert not torch.allclose(outputs[0], outputs[1], atol=1e-4)
 
     def test_cfg_scale_changes_output(self, tiny_stack):
@@ -107,15 +120,18 @@ class TestEndToEndGeneration:
                 out_cond = dit(x, t, text_embeds=cond.expand(x.shape[0], -1, -1))
                 out_uncond = dit(x, t, text_embeds=uncond.expand(x.shape[0], -1, -1))
                 return out_uncond + scale * (out_cond - out_uncond)
+
             return model_fn
 
         sampler = DDIMSampler(scheduler)
         torch.manual_seed(1)
-        low = sampler.sample(make_model(0.0), (1, 4, 8, 8), "cpu",
-                             num_inference_steps=4, show_progress=False)
+        low = sampler.sample(
+            make_model(0.0), (1, 4, 8, 8), "cpu", num_inference_steps=4, show_progress=False
+        )
         torch.manual_seed(1)
-        high = sampler.sample(make_model(7.5), (1, 4, 8, 8), "cpu",
-                              num_inference_steps=4, show_progress=False)
+        high = sampler.sample(
+            make_model(7.5), (1, 4, 8, 8), "cpu", num_inference_steps=4, show_progress=False
+        )
         assert not torch.allclose(low, high, atol=1e-4)
 
     def test_vae_reconstruction_fidelity(self, tiny_stack):

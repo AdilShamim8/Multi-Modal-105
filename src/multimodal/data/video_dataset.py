@@ -19,6 +19,7 @@ decord.bridge.set_bridge("torch")
 # Video loading utilities
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoLoader:
     """
     Efficient video loading with decord.
@@ -32,7 +33,7 @@ class VideoLoader:
         fps: int = 8,
         center_crop: bool = True,
         random_flip: bool = True,
-        sampling: str = "uniform",    # "uniform" | "random" | "fps"
+        sampling: str = "uniform",  # "uniform" | "random" | "fps"
     ):
         self.num_frames = num_frames
         self.frame_size = frame_size
@@ -52,13 +53,11 @@ class VideoLoader:
             video_fps = vr.get_avg_fps()
 
             # Sample frame indices
-            indices = self._sample_frame_indices(
-                total_frames, video_fps
-            )
+            indices = self._sample_frame_indices(total_frames, video_fps)
             if indices is None:
                 return None
 
-            frames = vr.get_batch(indices)   # (T, H, W, C) torch tensor
+            frames = vr.get_batch(indices)  # (T, H, W, C) torch tensor
             return frames
 
         except Exception as e:
@@ -79,7 +78,7 @@ class VideoLoader:
             if len(available) < self.num_frames:
                 return None
             start = random.randint(0, len(available) - self.num_frames)
-            return available[start: start + self.num_frames]
+            return available[start : start + self.num_frames]
 
         elif self.sampling == "uniform":
             if total_frames < self.num_frames:
@@ -95,9 +94,7 @@ class VideoLoader:
 
         return None
 
-    def preprocess_frames(
-        self, frames: torch.Tensor
-    ) -> torch.Tensor | None:
+    def preprocess_frames(self, frames: torch.Tensor) -> torch.Tensor | None:
         """
         Preprocess frames: resize, crop, normalize.
         Args:
@@ -127,12 +124,12 @@ class VideoLoader:
                 w_start = random.randint(0, new_W - self.frame_size)
 
             frame = frame[
-                h_start: h_start + self.frame_size,
-                w_start: w_start + self.frame_size,
+                h_start : h_start + self.frame_size,
+                w_start : w_start + self.frame_size,
             ]
             processed.append(torch.from_numpy(frame))
 
-        video = torch.stack(processed)   # (T, H, W, C)
+        video = torch.stack(processed)  # (T, H, W, C)
 
         # Random horizontal flip (consistent across frames)
         if self.random_flip and random.random() < 0.5:
@@ -153,6 +150,7 @@ class VideoLoader:
 # ─────────────────────────────────────────────────────────────────────────────
 # Video filtering
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class VideoFilter:
     """
@@ -194,9 +192,7 @@ class VideoFilter:
         if T < 2:
             return 0.0
 
-        frames_np = (
-            (frames.permute(1, 2, 3, 0).numpy() + 1.0) * 127.5
-        ).astype(np.uint8)
+        frames_np = ((frames.permute(1, 2, 3, 0).numpy() + 1.0) * 127.5).astype(np.uint8)
 
         motion_scores = []
         for i in range(min(T - 1, 8)):  # sample up to 8 frame pairs
@@ -207,10 +203,8 @@ class VideoFilter:
             f1 = cv2.resize(f1, (64, 64))
             f2 = cv2.resize(f2, (64, 64))
 
-            flow = cv2.calcOpticalFlowFarneback(
-                f1, f2, None, 0.5, 3, 15, 3, 5, 1.2, 0
-            )
-            magnitude = np.sqrt(flow[..., 0]**2 + flow[..., 1]**2).mean()
+            flow = cv2.calcOpticalFlowFarneback(f1, f2, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+            magnitude = np.sqrt(flow[..., 0] ** 2 + flow[..., 1] ** 2).mean()
             motion_scores.append(float(magnitude))
 
         return float(np.mean(motion_scores)) if motion_scores else 0.0
@@ -220,21 +214,15 @@ class VideoFilter:
         original = len(df)
 
         if "width" in df.columns and "height" in df.columns:
-            df = df[
-                (df["width"] >= self.min_resolution) &
-                (df["height"] >= self.min_resolution)
-            ]
+            df = df[(df["width"] >= self.min_resolution) & (df["height"] >= self.min_resolution)]
 
         if "duration" in df.columns:
-            df = df[
-                (df["duration"] >= self.min_duration) &
-                (df["duration"] <= self.max_duration)
-            ]
+            df = df[(df["duration"] >= self.min_duration) & (df["duration"] <= self.max_duration)]
 
         if "motion_score" in df.columns:
             df = df[
-                (df["motion_score"] >= self.min_motion_score) &
-                (df["motion_score"] <= self.max_motion_score)
+                (df["motion_score"] >= self.min_motion_score)
+                & (df["motion_score"] <= self.max_motion_score)
             ]
 
         if self.min_aesthetic_score and "aesthetic_score" in df.columns:
@@ -253,6 +241,7 @@ class VideoFilter:
 # ─────────────────────────────────────────────────────────────────────────────
 # Video standardization
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class VideoStandardizer:
     """
@@ -279,9 +268,7 @@ class VideoStandardizer:
         """Convert WebVid-10M metadata to unified format."""
         out = pd.DataFrame()
         out["video_id"] = df["videoid"].astype(str)
-        out["video_path"] = df["videoid"].apply(
-            lambda vid: str(Path(video_root) / f"{vid}.mp4")
-        )
+        out["video_path"] = df["videoid"].apply(lambda vid: str(Path(video_root) / f"{vid}.mp4"))
         out["caption"] = df["name"]
         out["duration"] = df.get("duration", 0.0)
         out["width"] = df.get("width", 0)
@@ -296,9 +283,7 @@ class VideoStandardizer:
         """Convert Panda-70M metadata to unified format."""
         out = pd.DataFrame()
         out["video_id"] = df["id"].astype(str)
-        out["video_path"] = df["id"].apply(
-            lambda vid: str(Path(video_root) / f"{vid}.mp4")
-        )
+        out["video_path"] = df["id"].apply(lambda vid: str(Path(video_root) / f"{vid}.mp4"))
         out["caption"] = df["caption"]
         out["duration"] = df.get("duration", 0.0)
         out["width"] = df.get("width", 0)
@@ -309,6 +294,7 @@ class VideoStandardizer:
 # ─────────────────────────────────────────────────────────────────────────────
 # Video dataset
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class VideoTextDataset(Dataset):
     """
@@ -382,7 +368,7 @@ class VideoTextDataset(Dataset):
         )
 
         return {
-            "video": video,                                    # (C, T, H, W)
+            "video": video,  # (C, T, H, W)
             "input_ids": tokens["input_ids"].squeeze(0),
             "attention_mask": tokens["attention_mask"].squeeze(0),
             "caption": caption,
@@ -392,6 +378,7 @@ class VideoTextDataset(Dataset):
 # ─────────────────────────────────────────────────────────────────────────────
 # Video latent cache
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class VideoLatentCache:
     """
@@ -437,10 +424,11 @@ class VideoLatentCache:
         )
 
         from tqdm import tqdm
+
         global_idx = 0
 
         for batch in tqdm(loader, desc="Encoding video latents"):
-            videos = batch["video"].to(self.device)   # (B, C, T, H, W)
+            videos = batch["video"].to(self.device)  # (B, C, T, H, W)
 
             # Encode with VideoVAE
             latents = self.video_vae.encode_to_latent(videos)  # (B, Cl, T', H', W')
@@ -455,9 +443,9 @@ class VideoLatentCache:
                 meta = {
                     "input_ids": batch["input_ids"][i].numpy(),
                     "attention_mask": batch["attention_mask"][i].numpy(),
-                    "caption": batch["caption"][i] if isinstance(
-                        batch["caption"], list
-                    ) else batch["caption"],
+                    "caption": batch["caption"][i]
+                    if isinstance(batch["caption"], list)
+                    else batch["caption"],
                 }
                 torch.save(meta, sample_dir / "meta.pt")
                 global_idx += 1
@@ -485,9 +473,7 @@ class VideoLatentDataset(Dataset):
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         p = self.samples[idx]
-        latent = torch.from_numpy(
-            np.load(p / "latent.npy").astype(np.float32)
-        ) * self.latent_scale
+        latent = torch.from_numpy(np.load(p / "latent.npy").astype(np.float32)) * self.latent_scale
 
         meta = torch.load(p / "meta.pt", weights_only=False)
 

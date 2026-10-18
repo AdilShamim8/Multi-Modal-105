@@ -47,9 +47,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         provided = request.headers.get("X-API-Key", "").encode()
-        authorized = any(
-            hmac.compare_digest(provided, expected) for expected in self._keys
-        )
+        authorized = any(hmac.compare_digest(provided, expected) for expected in self._keys)
         if not authorized:
             error = AuthenticationError("missing or invalid API key")
             return JSONResponse(status_code=error.http_status, content=error.to_dict())

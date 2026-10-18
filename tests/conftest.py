@@ -31,7 +31,7 @@ def tiny_vae_config():
     from multimodal.config.vae_config import VAEConfig
 
     return VAEConfig(
-        base_channels=32,               # divisible by GroupNorm's 32 groups
+        base_channels=32,  # divisible by GroupNorm's 32 groups
         channel_multipliers=(1, 2, 4, 8),  # 4 stages → symmetric 8x encoder/decoder
         num_res_blocks=1,
         attention_resolutions=(8,),

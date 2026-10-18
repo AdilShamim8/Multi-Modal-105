@@ -42,7 +42,7 @@ class GenerationUser(HttpUser):
             "/v1/generations",
             json={
                 "prompt": PROMPTS[hash(self) % len(PROMPTS)],
-                "num_steps": 12,       # draft profile: keep the queue honest
+                "num_steps": 12,  # draft profile: keep the queue honest
                 "num_outputs": 1,
             },
             headers=HEADERS,

@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 class CLIPScoreEvaluator:
     """
     CLIP Score evaluator for image-text alignment.
-    
+
     CLIP Score = w * max(cos_sim(CLIP_img(I), CLIP_txt(T)), 0)
     where w = 2.5 (scaling factor from Hessel et al. 2021)
-    
+
     Measures how well generated images align with their prompts.
     Reference: Hessel et al. "CLIPScore: A Reference-Free Evaluation Metric
     for Image Captioning" (2021).
@@ -30,6 +30,7 @@ class CLIPScoreEvaluator:
         self.w = w
 
         import open_clip
+
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(
             "ViT-L-14", pretrained="openai", device=device
         )
@@ -103,7 +104,7 @@ class CLIPScoreEvaluator:
         all_scores = []
 
         for i in tqdm(range(0, len(prompts), batch_size), desc="Computing CLIP Score"):
-            batch_prompts = prompts[i: i + batch_size]
+            batch_prompts = prompts[i : i + batch_size]
             batch_images = generator_fn(batch_prompts)
             if isinstance(batch_images, tuple):
                 batch_images = batch_images[0]
@@ -131,9 +132,9 @@ class CLIPScoreEvaluator:
         Measure diversity of generated images using pairwise CLIP cosine distance.
         Higher = more diverse.
         """
-        feats = self.encode_images(images.to(self.device))      # (N, D)
+        feats = self.encode_images(images.to(self.device))  # (N, D)
         # Pairwise cosine similarity matrix
-        sim_matrix = feats @ feats.T                             # (N, N)
+        sim_matrix = feats @ feats.T  # (N, N)
         # Exclude diagonal
         mask = ~torch.eye(sim_matrix.shape[0], dtype=torch.bool, device=self.device)
         diversity = 1.0 - sim_matrix[mask].mean().item()

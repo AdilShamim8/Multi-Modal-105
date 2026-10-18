@@ -13,9 +13,9 @@ class BaseConfig:
     # ── Hardware ─────────────────────────────────────────────────────────────
     device: str = "cuda"
     num_gpus: int = 8
-    mixed_precision: str = "bf16"          # "no" | "fp16" | "bf16"
+    mixed_precision: str = "bf16"  # "no" | "fp16" | "bf16"
     gradient_checkpointing: bool = True
-    compile_model: bool = False            # torch.compile
+    compile_model: bool = False  # torch.compile
 
     # ── Logging ───────────────────────────────────────────────────────────────
     log_every_n_steps: int = 50
@@ -35,7 +35,7 @@ class BaseConfig:
 
 @dataclass
 class OptimizerConfig:
-    optimizer: str = "adamw"              # "adam" | "adamw" | "lion"
+    optimizer: str = "adamw"  # "adam" | "adamw" | "lion"
     learning_rate: float = 1e-4
     weight_decay: float = 1e-2
     beta1: float = 0.9
@@ -44,7 +44,7 @@ class OptimizerConfig:
     max_grad_norm: float = 1.0
 
     # Scheduler
-    scheduler: str = "cosine"            # "cosine" | "linear" | "constant"
+    scheduler: str = "cosine"  # "cosine" | "linear" | "constant"
     warmup_steps: int = 500
     num_training_steps: int = 100_000
     min_lr_ratio: float = 0.0

@@ -34,8 +34,11 @@ def sched():
 class TestDDIM:
     def test_output_shape(self, sched):
         out = DDIMSampler(sched).sample(
-            model=FixedNoiseModel(), shape=(2, 4, 8, 8),
-            device="cpu", num_inference_steps=5, show_progress=False,
+            model=FixedNoiseModel(),
+            shape=(2, 4, 8, 8),
+            device="cpu",
+            num_inference_steps=5,
+            show_progress=False,
         )
         assert out.shape == (2, 4, 8, 8)
 
@@ -44,82 +47,128 @@ class TestDDIM:
         latents. Anything else breaks regression diffs and job replays."""
         sampler = DDIMSampler(sched)
         torch.manual_seed(0)
-        a = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=5, eta=0.0, show_progress=False)
+        a = sampler.sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=5,
+            eta=0.0,
+            show_progress=False,
+        )
         torch.manual_seed(0)
-        b = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=5, eta=0.0, show_progress=False)
+        b = sampler.sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=5,
+            eta=0.0,
+            show_progress=False,
+        )
         assert torch.equal(a, b)
 
     def test_eta_one_is_stochastic(self, sched):
         sampler = DDIMSampler(sched)
         torch.manual_seed(0)
-        a = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=5, eta=1.0, show_progress=False)
+        a = sampler.sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=5,
+            eta=1.0,
+            show_progress=False,
+        )
         torch.manual_seed(0)
-        b = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=5, eta=1.0, show_progress=False)
+        b = sampler.sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=5,
+            eta=1.0,
+            show_progress=False,
+        )
         if not torch.equal(a, b):  # same seed still equal; different seeds must differ
             pass
         torch.manual_seed(1)
-        c = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=5, eta=1.0, show_progress=False)
+        c = sampler.sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=5,
+            eta=1.0,
+            show_progress=False,
+        )
         assert not torch.equal(a, c)
 
     def test_provided_latents_are_respected(self, sched):
         z0 = torch.randn(1, 4, 8, 8)
         out = DDIMSampler(sched).sample(
-            FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-            num_inference_steps=2, latents=z0, show_progress=False,
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=2,
+            latents=z0,
+            show_progress=False,
         )
         assert out.shape == z0.shape
 
     def test_fewer_steps_changes_result(self, sched):
         sampler = DDIMSampler(sched)
         torch.manual_seed(0)
-        steps5 = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                                num_inference_steps=5, show_progress=False)
+        steps5 = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=5, show_progress=False
+        )
         torch.manual_seed(0)
-        steps20 = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                                 num_inference_steps=20, show_progress=False)
+        steps20 = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=20, show_progress=False
+        )
         assert not torch.allclose(steps5, steps20)
 
 
 class TestDDPM:
     def test_output_shape(self, sched):
         out = DDPMSampler(sched).sample(
-            FixedNoiseModel(), (2, 4, 8, 8), "cpu",
-            num_inference_steps=10, show_progress=False,
+            FixedNoiseModel(),
+            (2, 4, 8, 8),
+            "cpu",
+            num_inference_steps=10,
+            show_progress=False,
         )
         assert out.shape == (2, 4, 8, 8)
 
     def test_ancestral_noise_makes_seeds_matter(self, sched):
         sampler = DDPMSampler(sched)
         torch.manual_seed(0)
-        a = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=10, show_progress=False)
+        a = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=10, show_progress=False
+        )
         torch.manual_seed(5)
-        b = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=10, show_progress=False)
+        b = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=10, show_progress=False
+        )
         assert not torch.equal(a, b)
 
 
 class TestDPMSolver:
     def test_output_shape(self, sched):
         out = DPMSolver(sched).sample(
-            FixedNoiseModel(), (2, 4, 8, 8), "cpu",
-            num_inference_steps=10, show_progress=False,
+            FixedNoiseModel(),
+            (2, 4, 8, 8),
+            "cpu",
+            num_inference_steps=10,
+            show_progress=False,
         )
         assert out.shape == (2, 4, 8, 8)
 
     def test_deterministic_given_seed(self, sched):
         sampler = DPMSolver(sched)
         torch.manual_seed(0)
-        a = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=10, show_progress=False)
+        a = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=10, show_progress=False
+        )
         torch.manual_seed(0)
-        b = sampler.sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                           num_inference_steps=10, show_progress=False)
+        b = sampler.sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=10, show_progress=False
+        )
         assert torch.equal(a, b)
 
 
@@ -128,11 +177,17 @@ class TestSamplerAgreement:
         """At high step counts both walk the same ODE — outputs must be
         close (low-step DPM quality claim rests on this)."""
         torch.manual_seed(0)
-        dpm = DPMSolver(sched).sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                                      num_inference_steps=100, show_progress=False)
+        dpm = DPMSolver(sched).sample(
+            FixedNoiseModel(), (1, 4, 8, 8), "cpu", num_inference_steps=100, show_progress=False
+        )
         torch.manual_seed(0)
-        ddim = DDIMSampler(sched).sample(FixedNoiseModel(), (1, 4, 8, 8), "cpu",
-                                         num_inference_steps=100,
-                                         eta=0.0, show_progress=False)
+        ddim = DDIMSampler(sched).sample(
+            FixedNoiseModel(),
+            (1, 4, 8, 8),
+            "cpu",
+            num_inference_steps=100,
+            eta=0.0,
+            show_progress=False,
+        )
         diff = (dpm - ddim).abs().mean().item()
         assert diff < 0.5, f"samplers disagree: mean abs diff {diff:.3f}"

@@ -93,9 +93,7 @@ class T2ITrainer:
         self.optimizer = self._build_optimizer(model, config)
 
         # LR scheduler with warmup
-        self.lr_scheduler = self._build_lr_scheduler(
-            self.optimizer, config
-        )
+        self.lr_scheduler = self._build_lr_scheduler(self.optimizer, config)
 
         # Gradient checkpointing
         if config.gradient_checkpointing and hasattr(model, "enable_gradient_checkpointing"):
@@ -107,9 +105,7 @@ class T2ITrainer:
             self.optimizer,
             self.train_loader,
             self.lr_scheduler,
-        ) = self.accelerator.prepare(
-            model, self.optimizer, train_loader, self.lr_scheduler
-        )
+        ) = self.accelerator.prepare(model, self.optimizer, train_loader, self.lr_scheduler)
 
         self.val_loader = val_loader
 
@@ -148,8 +144,7 @@ class T2ITrainer:
             # HuggingFace path: weight transfer between diffusers' AutoencoderKL and
             # our VAE is not implemented; do not pretend it loaded.
             logger_msg = (
-                f"VAE weight transfer from {vae_path} not implemented; "
-                "using random init"
+                f"VAE weight transfer from {vae_path} not implemented; " "using random init"
             )
         print(logger_msg)
 
@@ -207,9 +202,7 @@ class T2ITrainer:
         return null_embeds
 
     @torch.no_grad()
-    def _encode_batch(
-        self, batch: dict[str, torch.Tensor]
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def _encode_batch(self, batch: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         """Encode images → latents and tokens → text embeddings."""
         # Image → latent
         images = batch["image"].to(self.device)
@@ -231,9 +224,7 @@ class T2ITrainer:
 
         return latents, text_embeds
 
-    def train_step(
-        self, batch: dict[str, torch.Tensor]
-    ) -> dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         self.model.train()
 
         with self.accelerator.accumulate(self.model):
@@ -307,9 +298,7 @@ class T2ITrainer:
 
         # Encode prompts
         tokens = self.text_encoder.tokenize(prompts, device=self.device)
-        text_embeds = self.text_encoder.encode(
-            tokens["input_ids"], tokens.get("attention_mask")
-        )
+        text_embeds = self.text_encoder.encode(tokens["input_ids"], tokens.get("attention_mask"))
 
         # Latent shape
         B = len(prompts)

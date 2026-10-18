@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -12,6 +11,7 @@ from .unet import TimestepEmbedding
 # ─────────────────────────────────────────────────────────────────────────────
 # Patch embedding
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class PatchEmbed(nn.Module):
     """2D image → sequence of patch tokens."""
@@ -29,8 +29,7 @@ class PatchEmbed(nn.Module):
         self.patch_size = patch_size
         self.num_patches = (img_size // patch_size) ** 2
         self.proj = nn.Conv2d(
-            in_channels, embed_dim,
-            kernel_size=patch_size, stride=patch_size, bias=bias
+            in_channels, embed_dim, kernel_size=patch_size, stride=patch_size, bias=bias
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -46,7 +45,7 @@ def get_2d_sincos_pos_embed(embed_dim: int, grid_size: int) -> np.ndarray:
     """
     grid_h = np.arange(grid_size, dtype=np.float32)
     grid_w = np.arange(grid_size, dtype=np.float32)
-    grid = np.meshgrid(grid_w, grid_h)   # [2, grid_size, grid_size]
+    grid = np.meshgrid(grid_w, grid_h)  # [2, grid_size, grid_size]
     grid = np.stack(grid, axis=0).reshape(2, -1)  # (2, N)
 
     emb_h = _get_1d_sincos(embed_dim // 2, grid[0])
@@ -57,7 +56,7 @@ def get_2d_sincos_pos_embed(embed_dim: int, grid_size: int) -> np.ndarray:
 def _get_1d_sincos(embed_dim: int, pos: np.ndarray) -> np.ndarray:
     omega = np.arange(embed_dim // 2, dtype=np.float64)
     omega /= embed_dim / 2.0
-    omega = 1.0 / (10000 ** omega)
+    omega = 1.0 / (10000**omega)
     out = np.outer(pos, omega)
     return np.concatenate([np.sin(out), np.cos(out)], axis=1)
 
@@ -65,6 +64,7 @@ def _get_1d_sincos(embed_dim: int, pos: np.ndarray) -> np.ndarray:
 # ─────────────────────────────────────────────────────────────────────────────
 # Adaptive Layer Norm (adaLN-Zero) — DiT's conditioning mechanism
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class AdaLNZero(nn.Module):
     """
@@ -86,8 +86,7 @@ class AdaLNZero(nn.Module):
 
     def forward(
         self, x: torch.Tensor, c: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor,
-               torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         mods = self.modulation(c)[:, None].chunk(6, dim=-1)
         shift1, scale1, gate1, shift2, scale2, gate2 = mods
         x_norm = self.norm(x) * (1 + scale1) + shift1
@@ -116,6 +115,7 @@ class AdaLNSingle(nn.Module):
 # DiT Block
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class DiTBlock(nn.Module):
     """
     DiT Transformer block with adaLN-Zero conditioning.
@@ -128,7 +128,7 @@ class DiTBlock(nn.Module):
         num_heads: int,
         mlp_ratio: float = 4.0,
         cond_dim: int = 1152,
-        context_dim: int | None = None,     # if None, no cross-attn
+        context_dim: int | None = None,  # if None, no cross-attn
         dropout: float = 0.0,
     ):
         super().__init__()
@@ -168,25 +168,35 @@ class DiTBlock(nn.Module):
 
     def _self_attn(self, x: torch.Tensor) -> torch.Tensor:
         B, N, D = x.shape
-        q = rearrange(self.self_attn_q(x), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        k = rearrange(self.self_attn_k(x), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        v = rearrange(self.self_attn_v(x), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
+        q = rearrange(
+            self.self_attn_q(x), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        k = rearrange(
+            self.self_attn_k(x), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        v = rearrange(
+            self.self_attn_v(x), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
         out = F.scaled_dot_product_attention(q, k, v)
         out = rearrange(out, "b nh n hd -> b n (nh hd)")
         return self.self_attn_out(out)
 
-    def _cross_attn(
-        self, x: torch.Tensor, context: torch.Tensor
-    ) -> torch.Tensor:
-        q = rearrange(self.cross_attn_q(x), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        k = rearrange(self.cross_attn_k(context), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
-        v = rearrange(self.cross_attn_v(context), "b n (nh hd) -> b nh n hd",
-                      nh=self.num_heads, hd=self.head_dim)
+    def _cross_attn(self, x: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
+        q = rearrange(
+            self.cross_attn_q(x), "b n (nh hd) -> b nh n hd", nh=self.num_heads, hd=self.head_dim
+        )
+        k = rearrange(
+            self.cross_attn_k(context),
+            "b n (nh hd) -> b nh n hd",
+            nh=self.num_heads,
+            hd=self.head_dim,
+        )
+        v = rearrange(
+            self.cross_attn_v(context),
+            "b n (nh hd) -> b nh n hd",
+            nh=self.num_heads,
+            hd=self.head_dim,
+        )
         out = F.scaled_dot_product_attention(q, k, v)
         out = rearrange(out, "b nh n hd -> b n (nh hd)")
         return self.cross_attn_out(out)
@@ -219,9 +229,9 @@ class DiTBlock(nn.Module):
 # Final layer
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class FinalLayer(nn.Module):
-    def __init__(self, hidden_size: int, patch_size: int,
-                 out_channels: int, cond_dim: int):
+    def __init__(self, hidden_size: int, patch_size: int, out_channels: int, cond_dim: int):
         super().__init__()
         self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.modulation = nn.Sequential(
@@ -230,9 +240,7 @@ class FinalLayer(nn.Module):
         )
         nn.init.zeros_(self.modulation[-1].weight)
         nn.init.zeros_(self.modulation[-1].bias)
-        self.linear = nn.Linear(
-            hidden_size, patch_size * patch_size * out_channels
-        )
+        self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels)
         nn.init.zeros_(self.linear.weight)
         nn.init.zeros_(self.linear.bias)
 
@@ -246,6 +254,7 @@ class FinalLayer(nn.Module):
 # DiT — full model
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class DiT(nn.Module):
     """
     Diffusion Transformer (DiT) for image generation.
@@ -257,15 +266,15 @@ class DiT(nn.Module):
 
     def __init__(
         self,
-        input_size: int = 32,         # latent spatial size (e.g., 64 for 512px images)
+        input_size: int = 32,  # latent spatial size (e.g., 64 for 512px images)
         patch_size: int = 2,
         in_channels: int = 4,
         hidden_size: int = 1152,
         depth: int = 28,
         num_heads: int = 16,
         mlp_ratio: float = 4.0,
-        num_classes: int = 1000,          # for class-conditional
-        context_dim: int | None = 768, # for text-conditional; None = class-only
+        num_classes: int = 1000,  # for class-conditional
+        context_dim: int | None = 768,  # for text-conditional; None = class-only
         class_dropout_prob: float = 0.1,
         learn_sigma: bool = True,
         dropout: float = 0.0,
@@ -310,22 +319,22 @@ class DiT(nn.Module):
         )
 
         # ── Transformer blocks ───────────────────────────────────────────────
-        self.blocks = nn.ModuleList([
-            DiTBlock(
-                hidden_size=hidden_size,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                cond_dim=hidden_size,
-                context_dim=hidden_size if self.has_text_cond else None,
-                dropout=dropout,
-            )
-            for _ in range(depth)
-        ])
+        self.blocks = nn.ModuleList(
+            [
+                DiTBlock(
+                    hidden_size=hidden_size,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    cond_dim=hidden_size,
+                    context_dim=hidden_size if self.has_text_cond else None,
+                    dropout=dropout,
+                )
+                for _ in range(depth)
+            ]
+        )
 
         # ── Final layer ──────────────────────────────────────────────────────
-        self.final_layer = FinalLayer(
-            hidden_size, patch_size, self.out_channels, hidden_size
-        )
+        self.final_layer = FinalLayer(hidden_size, patch_size, self.out_channels, hidden_size)
 
         self._init_weights()
 
@@ -335,12 +344,13 @@ class DiT(nn.Module):
                 nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
+
         self.apply(_basic_init)
 
         # Patch embedder
-        nn.init.xavier_uniform_(self.x_embedder.proj.weight.view(
-            self.x_embedder.proj.weight.shape[0], -1
-        ))
+        nn.init.xavier_uniform_(
+            self.x_embedder.proj.weight.view(self.x_embedder.proj.weight.shape[0], -1)
+        )
 
         # Timestep MLP
         nn.init.normal_(self.t_embedder[0].mlp[0].weight, std=0.02)
@@ -357,7 +367,7 @@ class DiT(nn.Module):
         force_drop_ids: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Build conditioning vector c from timestep + class label."""
-        t_emb = self.t_embedder(t)     # (B, D)
+        t_emb = self.t_embedder(t)  # (B, D)
 
         if y is not None:
             # Classifier-free guidance dropout
@@ -412,7 +422,7 @@ class DiT(nn.Module):
             text_embeds = encoder_hidden_states
 
         # Patch embed + positional encoding
-        x = self.x_embedder(x) + self.pos_embed         # (B, N, D)
+        x = self.x_embedder(x) + self.pos_embed  # (B, N, D)
 
         # Conditioning
         c, ctx = self._get_conditioning(t, y, text_embeds, force_drop_ids)
@@ -465,6 +475,7 @@ class DiT(nn.Module):
 # EMA model wrapper
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class EMAModel:
     """
     Exponential Moving Average of model weights.
@@ -487,10 +498,7 @@ class EMAModel:
         for name, param in model.named_parameters():
             if param.requires_grad:
                 assert name in self.shadow
-                self.shadow[name] = (
-                    self.decay * self.shadow[name]
-                    + (1.0 - self.decay) * param.data
-                )
+                self.shadow[name] = self.decay * self.shadow[name] + (1.0 - self.decay) * param.data
 
     def apply_shadow(self, model: nn.Module):
         """Copy EMA weights into model for inference."""

@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 
@@ -16,7 +15,7 @@ class NoiseScheduler:
         num_train_timesteps: int = 1000,
         beta_start: float = 0.00085,
         beta_end: float = 0.012,
-        beta_schedule: str = "scaled_linear",   # "linear"|"cosine"|"scaled_linear"
+        beta_schedule: str = "scaled_linear",  # "linear"|"cosine"|"scaled_linear"
         prediction_type: str = "v_prediction",  # "epsilon"|"sample"|"v_prediction"
         clip_sample: bool = False,
         clip_sample_range: float = 1.0,
@@ -33,16 +32,12 @@ class NoiseScheduler:
         self.sample_max_value = sample_max_value
 
         # ── Build beta schedule ───────────────────────────────────────────────
-        self.betas = self._build_betas(
-            num_train_timesteps, beta_start, beta_end, beta_schedule
-        )
+        self.betas = self._build_betas(num_train_timesteps, beta_start, beta_end, beta_schedule)
 
         # ── Precompute diffusion constants ────────────────────────────────────
         self.alphas = 1.0 - self.betas
         self.alphas_cumprod = torch.cumprod(self.alphas, dim=0)
-        self.alphas_cumprod_prev = torch.cat(
-            [torch.ones(1), self.alphas_cumprod[:-1]]
-        )
+        self.alphas_cumprod_prev = torch.cat([torch.ones(1), self.alphas_cumprod[:-1]])
 
         # sqrt(alpha_bar) — used to scale x0 in forward process
         self.sqrt_alphas_cumprod = self.alphas_cumprod.sqrt()
@@ -53,28 +48,20 @@ class NoiseScheduler:
         # sqrt(1 / alpha_bar) — used in DDPM posterior
         self.sqrt_recip_alphas_cumprod = (1.0 / self.alphas_cumprod).sqrt()
         # sqrt(1 / alpha_bar - 1)
-        self.sqrt_recipm1_alphas_cumprod = (
-            1.0 / self.alphas_cumprod - 1.0
-        ).sqrt()
+        self.sqrt_recipm1_alphas_cumprod = (1.0 / self.alphas_cumprod - 1.0).sqrt()
 
         # ── DDPM posterior q(x_{t-1} | x_t, x_0) ────────────────────────────
         self.posterior_variance = (
-            self.betas
-            * (1.0 - self.alphas_cumprod_prev)
-            / (1.0 - self.alphas_cumprod)
+            self.betas * (1.0 - self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
         )
         self.posterior_log_variance_clipped = torch.log(
             torch.clamp(self.posterior_variance, min=1e-20)
         )
         self.posterior_mean_coef1 = (
-            self.betas
-            * self.alphas_cumprod_prev.sqrt()
-            / (1.0 - self.alphas_cumprod)
+            self.betas * self.alphas_cumprod_prev.sqrt() / (1.0 - self.alphas_cumprod)
         )
         self.posterior_mean_coef2 = (
-            (1.0 - self.alphas_cumprod_prev)
-            * self.alphas.sqrt()
-            / (1.0 - self.alphas_cumprod)
+            (1.0 - self.alphas_cumprod_prev) * self.alphas.sqrt() / (1.0 - self.alphas_cumprod)
         )
 
         # SNR (signal-to-noise ratio) for min-SNR weighting
@@ -99,11 +86,7 @@ class NoiseScheduler:
 
         elif schedule == "scaled_linear":
             # SD-style: linear in sqrt space
-            return (
-                torch.linspace(
-                    beta_start ** 0.5, beta_end ** 0.5, T, dtype=torch.float64
-                ) ** 2
-            )
+            return torch.linspace(beta_start**0.5, beta_end**0.5, T, dtype=torch.float64) ** 2
 
         elif schedule == "cosine":
             # Nichol & Dhariwal (improved DDPM)
@@ -138,8 +121,8 @@ class NoiseScheduler:
         Forward diffusion: q(x_t | x_0) = N(sqrt(ā_t)*x0, (1-ā_t)*I)
         x_t = sqrt(ā_t)*x_0 + sqrt(1-ā_t)*ε
         """
-        sqrt_alpha_bar   = self._extract(self.sqrt_alphas_cumprod, timesteps, x_start.shape)
-        sqrt_one_minus   = self._extract(self.sqrt_one_minus_alphas_cumprod, timesteps, x_start.shape)
+        sqrt_alpha_bar = self._extract(self.sqrt_alphas_cumprod, timesteps, x_start.shape)
+        sqrt_one_minus = self._extract(self.sqrt_one_minus_alphas_cumprod, timesteps, x_start.shape)
         return sqrt_alpha_bar * x_start + sqrt_one_minus * noise
 
     def get_velocity(
@@ -264,6 +247,6 @@ class NoiseScheduler:
         """Set inference timesteps (subset of training timesteps)."""
         step_ratio = self.num_train_timesteps // num_inference_steps
         self.timesteps = (
-            torch.arange(0, num_inference_steps) * step_ratio
-        ).round().flip(0).long().to(device)
+            (torch.arange(0, num_inference_steps) * step_ratio).round().flip(0).long().to(device)
+        )
         self.num_inference_steps = num_inference_steps

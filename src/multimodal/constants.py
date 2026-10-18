@@ -31,9 +31,9 @@ ENV_PRODUCTION = "production"
 ENV = os.getenv("MM_ENV", ENV_DEVELOPMENT)
 
 # ── Latent-space geometry (matches the migrated VAE) ────────────────────────
-LATENT_CHANNELS = 4                 # AutoencoderKL latent depth
-VAE_DOWNSAMPLING = 8                # spatial compression factor
-VAE_SCALING_FACTOR = 0.18215        # SD-compatible latent normalizer
+LATENT_CHANNELS = 4  # AutoencoderKL latent depth
+VAE_DOWNSAMPLING = 8  # spatial compression factor
+VAE_SCALING_FACTOR = 0.18215  # SD-compatible latent normalizer
 
 # ── Diffusion defaults ──────────────────────────────────────────────────────
 NUM_TRAIN_TIMESTEPS = 1000
@@ -59,8 +59,8 @@ JOB_HASH_PREFIX = "mm:job:"
 # ── Retry / resilience ──────────────────────────────────────────────────────
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_BACKOFF_S = 0.5
-OOM_RETRIES = 2                     # retry generation with smaller batch
-WORKER_GRACE_PERIOD_S = 30.0        # drain in-flight jobs before exit
+OOM_RETRIES = 2  # retry generation with smaller batch
+WORKER_GRACE_PERIOD_S = 30.0  # drain in-flight jobs before exit
 
 # ── Content safety ──────────────────────────────────────────────────────────
 MODERATION_ENABLED = os.getenv("MM_MODERATION_ENABLED", "true").lower() == "true"

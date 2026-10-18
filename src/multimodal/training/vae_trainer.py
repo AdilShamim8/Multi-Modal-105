@@ -1,4 +1,3 @@
-
 import lpips
 import torch
 import torch.nn.functional as F
@@ -23,8 +22,9 @@ class VAETrainer:
     - Distributed training
     """
 
-    def __init__(self, config: VAEConfig, train_loader: DataLoader,
-                 val_loader: DataLoader | None = None):
+    def __init__(
+        self, config: VAEConfig, train_loader: DataLoader, val_loader: DataLoader | None = None
+    ):
         self.config = config
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -154,9 +154,7 @@ class VAETrainer:
 
         self.scaler_vae.scale(vae_losses["total"]).backward()
         self.scaler_vae.unscale_(self.opt_vae)
-        torch.nn.utils.clip_grad_norm_(
-            self.vae.parameters(), self.config.optimizer.max_grad_norm
-        )
+        torch.nn.utils.clip_grad_norm_(self.vae.parameters(), self.config.optimizer.max_grad_norm)
         self.scaler_vae.step(self.opt_vae)
         self.scaler_vae.update()
 

@@ -35,9 +35,11 @@ class TestModeration:
 
     def test_classifier_hook_respected(self):
         gate = ModerationGate(mode="classifier")
-        gate.set_classifier_hook(lambda p: __import__(
-            "multimodal.serving.moderation", fromlist=["ModerationVerdict"]
-        ).ModerationVerdict(allowed=False, reason="unsafe", score=0.99))
+        gate.set_classifier_hook(
+            lambda p: __import__(
+                "multimodal.serving.moderation", fromlist=["ModerationVerdict"]
+            ).ModerationVerdict(allowed=False, reason="unsafe", score=0.99)
+        )
         verdict = gate.check("some prompt")
         assert not verdict.allowed
         assert verdict.score == 0.99
@@ -67,16 +69,16 @@ class TestRateLimiter:
 
     def test_buckets_are_per_client(self):
         limiter = RateLimiter(capacity=1, refill_per_s=0.001)
-        limiter.check("a")           # a's bucket spent
-        limiter.check("b")           # b unaffected
+        limiter.check("a")  # a's bucket spent
+        limiter.check("b")  # b unaffected
 
     def test_refill_over_time(self):
         limiter = RateLimiter(capacity=1, refill_per_s=1000.0)
         limiter.check("c")
         import time
 
-        time.sleep(0.01)             # 10 ms × 1000/s = 10 tokens
-        limiter.check("c")           # refilled — no raise
+        time.sleep(0.01)  # 10 ms × 1000/s = 10 tokens
+        limiter.check("c")  # refilled — no raise
 
     def test_retry_after_headers(self):
         error = RateLimitError("limited", details={"retry_after_s": 2.4})

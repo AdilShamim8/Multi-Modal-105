@@ -54,9 +54,7 @@ class TestForwardProcess:
         xt = s.add_noise(x0, noise, t)
 
         def cos(a, b):
-            return torch.nn.functional.cosine_similarity(
-                a.flatten(), b.flatten(), dim=0
-            ).item()
+            return torch.nn.functional.cosine_similarity(a.flatten(), b.flatten(), dim=0).item()
 
         assert cos(xt, noise) > 0.98
         assert cos(xt, x0) < 0.15
@@ -67,9 +65,7 @@ class TestForwardProcess:
         x0 = torch.zeros(2048, 4, 4, 4)
         noise = torch.randn_like(x0)
         for t in [0, 25, 50, 75, 99]:
-            xt = tiny_scheduler.add_noise(
-                x0, noise, torch.full((2048,), t, dtype=torch.long)
-            )
+            xt = tiny_scheduler.add_noise(x0, noise, torch.full((2048,), t, dtype=torch.long))
             expected = float(tiny_scheduler.sqrt_one_minus_alphas_cumprod[t])
             assert abs(xt.std().item() - expected) < 0.03, f"t={t}"
 

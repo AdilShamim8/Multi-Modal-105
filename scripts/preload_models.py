@@ -26,7 +26,7 @@ log = get_logger(__name__)
 EXPECTED_MODELS = {
     "t2i-dit-s2": {
         "files": ["bundle.json", "weights.safetensors", "model.torchscript"],
-        "source_env": "MM_T2I_BUNDLE_URL",   # object-store prefix or file:// URI
+        "source_env": "MM_T2I_BUNDLE_URL",  # object-store prefix or file:// URI
     },
     "t2v-dit-b2": {
         "files": ["bundle.json", "weights.safetensors"],
@@ -65,16 +65,23 @@ def preload(config: ServingConfig, dry_run: bool = False, force: bool = False) -
             for required in spec["files"]:
                 if not (target / required).exists():
                     raise FileNotFoundError(required)
-            log.info("bundle verified", extra={
-                "key": key,
-                "sha256": str(manifest.get("sha256", ""))[:16],
-                "bytes": manifest.get("bytes"),
-            })
+            log.info(
+                "bundle verified",
+                extra={
+                    "key": key,
+                    "sha256": str(manifest.get("sha256", ""))[:16],
+                    "bytes": manifest.get("bytes"),
+                },
+            )
             loaded += 1
         except Exception as exc:
-            log.error("bundle verification failed", extra={
-                "key": key, "error": str(exc),
-            })
+            log.error(
+                "bundle verification failed",
+                extra={
+                    "key": key,
+                    "error": str(exc),
+                },
+            )
             failed += 1
             if force:
                 log.warning("force set — continuing past failed bundle", extra={"key": key})

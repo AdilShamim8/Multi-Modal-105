@@ -26,8 +26,8 @@ class T2IConfig(DiffusionConfig):
     resolution: int = 512
     center_crop: bool = True
     random_flip: bool = True
-    min_caption_chars: int = 5          # drop junk captions at prep time
-    min_aesthetic_score: float = 4.5    # CLIP-aesthetic pre-filter hook
+    min_caption_chars: int = 5  # drop junk captions at prep time
+    min_aesthetic_score: float = 4.5  # CLIP-aesthetic pre-filter hook
 
     # ── Training scale ────────────────────────────────────────────────────
     batch_size: int = 4

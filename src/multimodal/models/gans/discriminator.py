@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,17 +9,14 @@ class EqualConv2d(nn.Module):
 
     def __init__(self, in_ch, out_ch, kernel_size, stride=1, padding=0, bias=True):
         super().__init__()
-        self.weight = nn.Parameter(
-            torch.randn(out_ch, in_ch, kernel_size, kernel_size)
-        )
-        self.scale = 1 / np.sqrt(in_ch * kernel_size ** 2)
+        self.weight = nn.Parameter(torch.randn(out_ch, in_ch, kernel_size, kernel_size))
+        self.scale = 1 / np.sqrt(in_ch * kernel_size**2)
         self.stride = stride
         self.padding = padding
         self.bias = nn.Parameter(torch.zeros(out_ch)) if bias else None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return F.conv2d(x, self.weight * self.scale,
-                        self.bias, self.stride, self.padding)
+        return F.conv2d(x, self.weight * self.scale, self.bias, self.stride, self.padding)
 
 
 class MinibatchStdDev(nn.Module):
@@ -38,16 +34,16 @@ class MinibatchStdDev(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
         G = min(self.group_size, B)
-        if B % G != 0:               # e.g. B=5, group=4 → degrade to per-sample
+        if B % G != 0:  # e.g. B=5, group=4 → degrade to per-sample
             G = B
         M = B // G
 
-        y = x.view(G, M, C, H, W)                 # (G, M, C, H, W)
-        y = y - y.mean(dim=0, keepdim=True)       # deviation from group mean
-        y = y.pow(2).mean(dim=0)                  # (M, C, H, W) variance
-        y = (y + 1e-8).sqrt()                     # std
-        y = y.mean(dim=[1, 2, 3], keepdim=True)   # (M, 1, 1, 1) scalar/sample
-        y = y.repeat(G, 1, H, W)                  # (B, 1, H, W)
+        y = x.view(G, M, C, H, W)  # (G, M, C, H, W)
+        y = y - y.mean(dim=0, keepdim=True)  # deviation from group mean
+        y = y.pow(2).mean(dim=0)  # (M, C, H, W) variance
+        y = (y + 1e-8).sqrt()  # std
+        y = y.mean(dim=[1, 2, 3], keepdim=True)  # (M, 1, 1, 1) scalar/sample
+        y = y.repeat(G, 1, H, W)  # (B, 1, H, W)
         return torch.cat([x, y], dim=1)
 
 
@@ -84,7 +80,7 @@ class StyleGAN2Discriminator(nn.Module):
         log_res = int(np.log2(img_resolution))
 
         def nf(stage):
-            return min(channel_base // (2 ** stage), channel_max)
+            return min(channel_base // (2**stage), channel_max)
 
         # From-RGB
         self.from_rgb = EqualConv2d(img_channels, nf(log_res), 1)

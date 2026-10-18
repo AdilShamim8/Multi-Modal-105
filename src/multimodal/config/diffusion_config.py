@@ -10,7 +10,7 @@ class DiffusionConfig(BaseConfig):
     beta_start: float = 0.00085
     beta_end: float = 0.012
     beta_schedule: str = "scaled_linear"  # "linear"|"cosine"|"scaled_linear"
-    prediction_type: str = "v_prediction" # "epsilon"|"sample"|"v_prediction"
+    prediction_type: str = "v_prediction"  # "epsilon"|"sample"|"v_prediction"
     clip_sample: bool = False
 
     # ── UNet architecture ─────────────────────────────────────────────────────
@@ -41,11 +41,11 @@ class DiffusionConfig(BaseConfig):
 
     # ── Training ──────────────────────────────────────────────────────────────
     image_size: int = 512
-    latent_size: int = 64           # image_size // vae_downsample_factor (8)
+    latent_size: int = 64  # image_size // vae_downsample_factor (8)
     batch_size: int = 4
     num_train_steps: int = 200_000
     ema_decay: float = 0.9999
-    snr_gamma: float | None = 5.0   # min-SNR weighting
+    snr_gamma: float | None = 5.0  # min-SNR weighting
 
     optimizer: OptimizerConfig = None
 

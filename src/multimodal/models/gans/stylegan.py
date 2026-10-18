@@ -92,11 +92,7 @@ class StyleGAN2(nn.Module):
         amortized by the interval (StyleGAN2 Appendix B)."""
         if self.r1_gamma <= 0 or step % self.lazy_reg_interval != 0:
             return None
-        return (
-            self.discriminator.r1_penalty(real_images)
-            * self.r1_gamma
-            / self.lazy_reg_interval
-        )
+        return self.discriminator.r1_penalty(real_images) * self.r1_gamma / self.lazy_reg_interval
 
     # ── Sampling ───────────────────────────────────────────────────────────
     @torch.no_grad()

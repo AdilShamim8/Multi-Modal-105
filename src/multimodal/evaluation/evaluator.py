@@ -113,6 +113,7 @@ class T2IEvaluator:
         if compute_clip:
             logger.info("Running CLIP Score evaluation...")
             try:
+
                 def clip_gen(prompts: list[str]):
                     # CLIP wants (prompts) -> images; the underlying generator
                     # is batch_size-driven, so derive the batch from the prompts.
@@ -148,9 +149,12 @@ class T2IEvaluator:
         results_file = self.results_dir / f"eval_step{step:07d}.json"
         with open(results_file, "w") as f:
             json.dump(
-                {k: float(v) if isinstance(v, np.floating | float) else v
-                 for k, v in results.items()},
-                f, indent=2
+                {
+                    k: float(v) if isinstance(v, np.floating | float) else v
+                    for k, v in results.items()
+                },
+                f,
+                indent=2,
             )
 
         logger.info(f"Evaluation results @ step {step}:")
@@ -188,7 +192,7 @@ class T2IEvaluator:
 
         def generator_fn(n, prompts=None):
             start = idx[0]
-            batch = images_tensor[start: start + n].to(self.device)
+            batch = images_tensor[start : start + n].to(self.device)
             idx[0] += n
             return batch
 

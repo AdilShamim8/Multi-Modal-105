@@ -52,8 +52,9 @@ class TestForward:
     def test_context_changes_output(self, tiny_unet):
         """After un-zeroing the (deliberately zero-init) output heads, text
         conditioning must flow to the output — the trained regime."""
-        heads = [m.proj_out for m in tiny_unet.modules()
-                 if type(m).__name__ == "SpatialTransformerBlock"]
+        heads = [
+            m.proj_out for m in tiny_unet.modules() if type(m).__name__ == "SpatialTransformerBlock"
+        ]
         with torch.no_grad():
             tiny_unet.conv_out.weight.normal_(0.0, 0.02)
             for proj in heads:

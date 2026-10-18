@@ -37,8 +37,8 @@ _VALID = {
     (JobStatus.RUNNING, JobStatus.SUCCEEDED),
     (JobStatus.RUNNING, JobStatus.FAILED),
     (JobStatus.RUNNING, JobStatus.CANCELLED),
-    (JobStatus.FAILED, JobStatus.QUEUED),        # bounded retry
-    (JobStatus.CANCELLED, JobStatus.QUEUED),      # operator requeue
+    (JobStatus.FAILED, JobStatus.QUEUED),  # bounded retry
+    (JobStatus.CANCELLED, JobStatus.QUEUED),  # operator requeue
 }
 
 TERMINAL = {JobStatus.SUCCEEDED, JobStatus.CANCELLED}
@@ -51,7 +51,7 @@ class GenerationJob:
     job_id: str
     prompt: str
     negative_prompt: str = ""
-    modality: str = "image"            # "image" | "video"
+    modality: str = "image"  # "image" | "video"
     width: int = 512
     height: int = 512
     num_frames: int = 16
@@ -60,7 +60,7 @@ class GenerationJob:
     sampler: str = "dpm++"
     num_outputs: int = 1
     seed: int | None = None
-    api_key_hint: str = "-"            # key fingerprint (never the raw key)
+    api_key_hint: str = "-"  # key fingerprint (never the raw key)
     status: JobStatus = JobStatus.QUEUED
     attempts: int = 0
     created_at: float = field(default_factory=time.time)
@@ -89,8 +89,11 @@ class GenerationJob:
     def to_redis(self) -> dict[str, str]:
         payload = asdict(self)
         payload["status"] = self.status.value
-        return {k: json.dumps(v) if isinstance(v, dict | list) else str(v)
-                for k, v in payload.items() if v is not None}
+        return {
+            k: json.dumps(v) if isinstance(v, dict | list) else str(v)
+            for k, v in payload.items()
+            if v is not None
+        }
 
     @classmethod
     def from_redis(cls, data: dict[str, str]) -> GenerationJob:
@@ -101,8 +104,10 @@ class GenerationJob:
             elif key == "status":
                 kwargs[key] = JobStatus(value)
             elif key in ("seed", "started_at", "finished_at"):
-                kwargs[key] = None if value in ("", "None") else float(
-                    value if "." in value or "e" in value else int(value)
+                kwargs[key] = (
+                    None
+                    if value in ("", "None")
+                    else float(value if "." in value or "e" in value else int(value))
                 )
                 if key == "seed" and kwargs[key] is not None:
                     kwargs[key] = int(kwargs[key])

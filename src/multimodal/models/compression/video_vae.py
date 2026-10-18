@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -8,6 +7,7 @@ from einops import rearrange
 # ─────────────────────────────────────────────────────────────────────────────
 # 3D Causal Convolution (for temporal causality)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class CausalConv3d(nn.Module):
     """
@@ -27,12 +27,13 @@ class CausalConv3d(nn.Module):
     ):
         super().__init__()
         kt, kh, kw = kernel_size
-        self.temporal_pad = (kt - 1) * dilation   # causal: only pad past
+        self.temporal_pad = (kt - 1) * dilation  # causal: only pad past
         self.spatial_pad_h = kh // 2
         self.spatial_pad_w = kw // 2
 
         self.conv = nn.Conv3d(
-            in_channels, out_channels,
+            in_channels,
+            out_channels,
             kernel_size=kernel_size,
             stride=stride,
             dilation=(dilation, 1, 1),
@@ -42,16 +43,23 @@ class CausalConv3d(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # x: (B, C, T, H, W)
         # Causal temporal padding (pad only left = past)
-        x = F.pad(x, (
-            self.spatial_pad_w, self.spatial_pad_w,  # W pad
-            self.spatial_pad_h, self.spatial_pad_h,  # H pad
-            self.temporal_pad, 0,                    # T causal pad
-        ))
+        x = F.pad(
+            x,
+            (
+                self.spatial_pad_w,
+                self.spatial_pad_w,  # W pad
+                self.spatial_pad_h,
+                self.spatial_pad_h,  # H pad
+                self.temporal_pad,
+                0,  # T causal pad
+            ),
+        )
         return self.conv(x)
 
 
 class SpatialDownsample(nn.Module):
     """2x spatial downsampling using strided conv."""
+
     def __init__(self, channels: int):
         super().__init__()
         self.conv = nn.Conv2d(channels, channels, 3, stride=2, padding=1)
@@ -67,6 +75,7 @@ class SpatialDownsample(nn.Module):
 
 class SpatialUpsample(nn.Module):
     """2x spatial upsampling (nearest + conv)."""
+
     def __init__(self, channels: int):
         super().__init__()
         self.conv = nn.Conv2d(channels, channels, 3, padding=1)
@@ -82,6 +91,7 @@ class SpatialUpsample(nn.Module):
 
 class TemporalDownsample(nn.Module):
     """2x temporal downsampling using strided causal conv."""
+
     def __init__(self, channels: int):
         super().__init__()
         self.conv = CausalConv3d(channels, channels, (3, 1, 1), stride=(2, 1, 1))
@@ -92,6 +102,7 @@ class TemporalDownsample(nn.Module):
 
 class TemporalUpsample(nn.Module):
     """2x temporal upsampling (interpolate + conv)."""
+
     def __init__(self, channels: int):
         super().__init__()
         self.conv = CausalConv3d(channels, channels, (3, 1, 1))
@@ -108,6 +119,7 @@ class TemporalUpsample(nn.Module):
 # ─────────────────────────────────────────────────────────────────────────────
 # 3D ResBlock (spatial + temporal)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 class VideoResBlock(nn.Module):
     """
@@ -136,7 +148,8 @@ class VideoResBlock(nn.Module):
         self.act = nn.SiLU()
         self.shortcut = (
             nn.Conv2d(in_channels, out_channels, 1)
-            if in_channels != out_channels else nn.Identity()
+            if in_channels != out_channels
+            else nn.Identity()
         )
 
     def _apply_spatial(self, x: torch.Tensor) -> torch.Tensor:
@@ -169,6 +182,7 @@ class VideoResBlock(nn.Module):
 # Video Encoder / Decoder
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoEncoder(nn.Module):
     """
     Video VAE encoder:
@@ -184,8 +198,8 @@ class VideoEncoder(nn.Module):
         base_channels: int = 128,
         channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
-        temporal_downsample_times: int = 2,   # 2^2 = 4x temporal compression
-        spatial_downsample_times: int = 3,    # 2^3 = 8x spatial compression
+        temporal_downsample_times: int = 2,  # 2^2 = 4x temporal compression
+        spatial_downsample_times: int = 3,  # 2^3 = 8x spatial compression
         dropout: float = 0.0,
         double_z: bool = True,
     ):
@@ -313,6 +327,7 @@ class VideoDecoder(nn.Module):
 # Video AutoencoderKL
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 class VideoAutoencoderKL(nn.Module):
     """
     KL-regularized Video VAE.
@@ -327,8 +342,8 @@ class VideoAutoencoderKL(nn.Module):
         base_channels: int = 128,
         channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
-        temporal_compression: int = 4,    # T / 4
-        spatial_compression: int = 8,     # H,W / 8
+        temporal_compression: int = 4,  # T / 4
+        spatial_compression: int = 8,  # H,W / 8
         scaling_factor: float = 0.18215,
     ):
         super().__init__()
@@ -382,13 +397,9 @@ class VideoAutoencoderKL(nn.Module):
         return mu + std * eps
 
     def kl_loss(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
-        return 0.5 * (mu.pow(2) + logvar.exp() - 1.0 - logvar).sum(
-            dim=[1, 2, 3, 4]
-        ).mean()
+        return 0.5 * (mu.pow(2) + logvar.exp() - 1.0 - logvar).sum(dim=[1, 2, 3, 4]).mean()
 
-    def forward(
-        self, x: torch.Tensor, sample: bool = True
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, sample: bool = True) -> tuple[torch.Tensor, torch.Tensor]:
         mu, logvar = self.encode(x)
         z = self.sample_latent(mu, logvar) if sample else mu
         recon = self.decode(z)

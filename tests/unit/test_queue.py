@@ -42,7 +42,7 @@ class FakeRedis:
         src_list, dst_list = self._list(src), self._list(dst)
         if not src_list:
             return None
-        value = src_list.pop()           # tail — FIFO with LPUSH
+        value = src_list.pop()  # tail — FIFO with LPUSH
         dst_list.append(value)
         return value
 
