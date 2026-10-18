@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -246,7 +248,9 @@ class VideoEncoder(nn.Module):
         """x: (B, C, T, H, W) → (B, 2*latent_ch, T', H', W')"""
         h = self.conv_in(x)
 
-        for block in self.down_blocks:
+        # ModuleList is non-generic in torch's stubs (Iterator[Module]); the
+        # cast documents the per-scale ModuleList groups. Zero runtime cost.
+        for block in cast("list[nn.ModuleList]", self.down_blocks):
             for layer in block:
                 h = layer(h)
 
@@ -315,7 +319,7 @@ class VideoDecoder(nn.Module):
         h = self.conv_in(z)
         h = self.mid_block(h)
 
-        for block in self.up_blocks:
+        for block in cast("list[nn.ModuleList]", self.up_blocks):
             for layer in block:
                 h = layer(h)
 
