@@ -52,7 +52,9 @@ class LAIONDataset(Dataset):
         self.meta = self.meta.reset_index(drop=True)
         logger.info(f"Dataset loaded: {len(self.meta)} samples after filtering")
 
-        # Transforms
+        # Transforms. Union-annotated: the bucket transform returns
+        # (tensor, bucket); the plain transform returns the tensor alone.
+        self.transform: ResolutionBucketTransform | ImageTransform
         if use_bucket_sampling:
             self.transform = ResolutionBucketTransform(random_flip=random_flip)
         else:
@@ -97,11 +99,11 @@ class LAIONDataset(Dataset):
 
         try:
             image = Image.open(image_path)
-            if self.use_bucket_sampling:
-                pixel_values, bucket = self.transform(image)
+            out = self.transform(image)
+            if isinstance(out, tuple):
+                pixel_values, bucket = out
             else:
-                pixel_values = self.transform(image)
-                bucket = None
+                pixel_values, bucket = out, None
         except Exception as e:
             logger.warning(f"Failed to load image {image_path}: {e}")
             pixel_values = torch.zeros(3, 512, 512)
