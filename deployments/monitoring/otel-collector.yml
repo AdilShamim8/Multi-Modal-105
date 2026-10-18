@@ -1,0 +1,43 @@
+# OTEL Collector config — receives spans from API + workers, exports upstream.
+# Deployed in the observability namespace; referenced by ServingConfig
+# (MM_OTEL_ENDPOINT). Last audited: 2026-10-18.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+  # Drop noisy framework spans; keep platform spans (mm.* attributes).
+  filter/drop_noise:
+    filters:
+      exclude:
+        match_type: strict
+        span_names:
+          - "uvicorn.http.asgi"
+          - "torch.jit.trace"
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+exporters:
+  # Jaeger for the local stack; swap for the vendor backend in production.
+  jaeger:
+    endpoint: jaeger.observability.svc.cluster.local:14250
+    tls:
+      insecure: true
+  logging:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/drop_noise, batch]
+      exporters: [jaeger, logging]
