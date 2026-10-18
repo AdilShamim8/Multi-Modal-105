@@ -1,0 +1,32 @@
+# EditorConfig — https://editorconfig.org
+# Keeps every contributor's editor honest across platforms.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{py,tf}]
+indent_size = 4
+max_line_length = 100
+
+[*.{yml,yaml,json,toml,md,html,css,js,ts}]
+indent_size = 2
+
+[*.md]
+# Two trailing spaces are meaningful line breaks in Markdown.
+trim_trailing_whitespace = false
+
+[{Makefile,*.mk}]
+indent_style = tab
+
+[*.sh]
+indent_size = 2
+
+[*.{cfg,ini}]
+indent_size = 4
