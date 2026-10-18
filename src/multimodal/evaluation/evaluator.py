@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import logging
 from collections.abc import Callable
@@ -164,15 +166,88 @@ class T2IEvaluator:
 
         return results
 
+    @classmethod
+    def from_folder(
+        cls,
+        reference_dir: str | None = None,
+        prompts_file: str | None = None,
+        device: str = "cpu",
+        cache_dir: str = "./eval_cache",
+        batch_size: int = 32,
+    ) -> T2IEvaluator:
+        """Build an evaluator rooted on image folders.
+
+        FID compares generated samples against a *real* distribution —
+        ``reference_dir`` supplies it (loaded once into an in-memory
+        DataLoader). ``prompts_file`` (one prompt per line) seeds CLIP
+        scoring; a small generic set is used when absent so ``mma evaluate``
+        still produces IS/CLIP numbers without extra inputs. When no
+        reference images are found, the real loader is empty and FID is
+        reported as nan instead of crashing the whole suite.
+        """
+        from torch.utils.data import DataLoader, TensorDataset
+
+        prompts: list[str] = []
+        if prompts_file and Path(prompts_file).exists():
+            prompts = [
+                ln.strip() for ln in Path(prompts_file).read_text().splitlines() if ln.strip()
+            ]
+        if not prompts:
+            prompts = [
+                "a photograph of a landscape",
+                "a painting of a person",
+                "a close-up of an animal",
+                "a city street at night",
+                "an abstract pattern",
+                "a plate of food",
+                "a futuristic vehicle",
+                "a forest in winter",
+            ]
+
+        tensors: list[torch.Tensor] = []
+        if reference_dir and Path(reference_dir).is_dir():
+            paths = sorted(Path(reference_dir).glob("*.png")) + sorted(
+                Path(reference_dir).glob("*.jpg")
+            )
+            for p in paths[:50000]:
+                try:
+                    img = Image.open(p).convert("RGB")
+                    t = torch.from_numpy(np.array(img).copy()).float() / 127.5 - 1.0
+                    tensors.append(t.permute(2, 0, 1))
+                except Exception:
+                    continue
+        if not tensors:
+            logger.warning(
+                "no reference images found — FID will be reported as nan; "
+                "pass --reference-dir to enable it",
+                extra={"reference_dir": str(reference_dir)},
+            )
+            real_tensor = torch.zeros(0)
+        else:
+            real_tensor = torch.stack(tensors)
+        loader = DataLoader(TensorDataset(real_tensor), batch_size=batch_size, shuffle=False)
+
+        return cls(
+            real_dataloader=loader,
+            eval_prompts=prompts,
+            cache_dir=cache_dir,
+            device=device,
+            clip_batch_size=batch_size,
+        )
+
     def evaluate_from_folder(
         self,
         fake_image_dir: str,
         step: int,
         prompts_file: str | None = None,
+        compute_fid: bool = True,
+        compute_is: bool = True,
+        compute_clip: bool = True,
+        compute_diversity: bool = True,
     ) -> dict[str, Any]:
         """
         Evaluate from a folder of pre-generated images.
-        Expects: fake_image_dir/{00000.png, 00001.png, ..., prompts.txt}
+        Expects: fake_image_dir/{00000.png, 00001.png, ...}
         """
         fake_dir = Path(fake_image_dir)
         image_paths = sorted(fake_dir.glob("*.png")) + sorted(fake_dir.glob("*.jpg"))
@@ -182,13 +257,21 @@ class T2IEvaluator:
         for p in image_paths[:10000]:
             try:
                 img = Image.open(p).convert("RGB")
-                t = torch.from_numpy(np.array(img)).float() / 127.5 - 1.0
+                t = torch.from_numpy(np.array(img).copy()).float() / 127.5 - 1.0
                 images_list.append(t.permute(2, 0, 1))
             except Exception:
                 continue
-
+        if not images_list:
+            raise ValueError(f"no sample images found in {fake_dir} (expected *.png / *.jpg)")
         images_tensor = torch.stack(images_list)
         idx = [0]
+
+        if prompts_file and Path(prompts_file).exists():
+            loaded = [
+                ln.strip() for ln in Path(prompts_file).read_text().splitlines() if ln.strip()
+            ]
+            if loaded:
+                self.eval_prompts = loaded
 
         def generator_fn(n, prompts=None):
             start = idx[0]
@@ -196,4 +279,11 @@ class T2IEvaluator:
             idx[0] += n
             return batch
 
-        return self.evaluate_all(generator_fn, step)
+        return self.evaluate_all(
+            generator_fn,
+            step,
+            compute_fid=compute_fid,
+            compute_is=compute_is,
+            compute_clip=compute_clip,
+            compute_diversity=compute_diversity,
+        )
