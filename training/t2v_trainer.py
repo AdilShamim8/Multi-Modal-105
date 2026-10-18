@@ -18,8 +18,8 @@ from models.diffusion.dit import EMAModel
 from models.compression.video_vae import VideoAutoencoderKL
 from models.text_encoder import CLIPTextEncoder, T5TextEncoder
 from multimodal.config.t2v_config import T2VConfig
-from utils.checkpoint import CheckpointManager
-from utils.distributed import is_main_process
+from multimodal.utils.checkpoint import CheckpointManager
+from multimodal.utils.distributed import is_main_process
 from sampling.ddim_sampler import DDIMSampler
 
 logger = logging.getLogger(__name__)

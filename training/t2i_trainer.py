@@ -18,9 +18,9 @@ from models.diffusion.dit import EMAModel
 from models.text_encoder import CLIPTextEncoder
 from models.vae.vae import AutoencoderKL
 from multimodal.config.t2i_config import T2IConfig
-from utils.logging_utils import MetricLogger
-from utils.checkpoint import CheckpointManager
-from utils.distributed import is_main_process
+from multimodal.utils.logging_utils import MetricLogger
+from multimodal.utils.checkpoint import CheckpointManager
+from multimodal.utils.distributed import is_main_process
 from sampling.ddim_sampler import DDIMSampler
 
 
