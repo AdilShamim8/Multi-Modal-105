@@ -21,7 +21,12 @@ from starlette.responses import JSONResponse, Response
 from ..exceptions import AuthenticationError
 
 #: Paths that never require auth (liveness, readiness, metrics, docs).
-PUBLIC_PATHS = {"/healthz", "/readyz", "/metrics", "/docs", "/openapi.json", "/redoc"}
+#: Prefix match — /metrics/ (redirect target) must stay public too.
+PUBLIC_PATHS = ("/healthz", "/readyz", "/metrics", "/docs", "/redoc", "/openapi.json")
+
+
+def _is_public(path: str) -> bool:
+    return any(path == p or path.startswith(p + "/") for p in PUBLIC_PATHS)
 
 
 def key_fingerprint(api_key: str) -> str:
@@ -38,7 +43,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         self._keys = [k.encode() for k in api_keys]
 
     async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
-        if not self.enabled or request.url.path in PUBLIC_PATHS:
+        if not self.enabled or _is_public(request.url.path):
             return await call_next(request)
 
         provided = request.headers.get("X-API-Key", "").encode()
