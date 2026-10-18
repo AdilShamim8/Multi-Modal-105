@@ -1,0 +1,12 @@
+# PriorityClass — referenced by the GPU worker Deployment.
+# Generation jobs are the product; when the cluster is under pressure,
+# workers must be evicted LAST (after batch/preemptible workloads).
+# Last audited: 2026-10-18
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: generation-critical
+value: 1000000
+globalDefault: false
+description: "Multi-modal generation workers — the revenue path; evict last."
+preemptionPolicy: PreemptLowerPriority
