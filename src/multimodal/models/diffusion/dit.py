@@ -6,6 +6,10 @@ import math
 import numpy as np
 from typing import Optional, Tuple
 
+# TimestepEmbedding is shared with the U-Net implementation (same package;
+# no cycle: unet.py does not import dit.py).
+from .unet import TimestepEmbedding
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Patch embedding
@@ -390,6 +394,8 @@ class DiT(nn.Module):
         t: torch.Tensor,
         y: Optional[torch.Tensor] = None,
         text_embeds: Optional[torch.Tensor] = None,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
         force_drop_ids: bool = False,
     ) -> torch.Tensor:
         """
@@ -398,9 +404,15 @@ class DiT(nn.Module):
             t:           (B,) timesteps
             y:           (B,) class labels (optional)
             text_embeds: (B, seq_len, context_dim) text embeddings (optional)
+            encoder_hidden_states: diffusers-style alias for text_embeds —
+                keeps DiT and U-Net interchangeable behind the pipelines
         Returns:
             (B, C, H, W) or (B, 2C, H, W) if learn_sigma
         """
+        # encoder_hidden_states is the canonical pipeline kwarg; accept both.
+        if text_embeds is None and encoder_hidden_states is not None:
+            text_embeds = encoder_hidden_states
+
         # Patch embed + positional encoding
         x = self.x_embedder(x) + self.pos_embed         # (B, N, D)
 
