@@ -11,7 +11,7 @@ health payloads. See docs/architecture/failure-modes.md (secret leakage).
 from __future__ import annotations
 
 import os
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -88,8 +88,14 @@ class ServingConfig(BaseModel):
         if not keys:
             dev_key = _env("MM_API_KEY", "")
             keys = [dev_key] if dev_key else []
+        env_raw = _env("MM_ENV", "development") or "development"
+        if env_raw not in ("development", "staging", "production"):
+            raise ConfigError(
+                "MM_ENV must be development|staging|production",
+                details={"value": env_raw},
+            )
         return cls(
-            env=(_env("MM_ENV", "development") or "development"),
+            env=cast(Literal["development", "staging", "production"], env_raw),
             host=(_env("MM_API_HOST", "0.0.0.0") or "0.0.0.0"),
             port=int(_env("MM_API_PORT", "8000") or 8000),
             api_workers=int(_env("MM_API_WORKERS", "4") or 4),
