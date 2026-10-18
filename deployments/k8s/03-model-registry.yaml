@@ -1,0 +1,59 @@
+# Model registry PVC — read-only mount into every worker pod.
+# Populated by the preload Job (scripts/preload_models.py); workers never
+# write here, which is what makes rolling model rollbacks instant.
+# Last audited: 2026-10-18
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-registry
+  namespace: multimodal
+  labels:
+    app.kubernetes.io/name: multimodal
+    app.kubernetes.io/component: registry
+spec:
+  accessModes:
+    - ReadOnlyMany        # many workers, zero writers
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 20Gi       # ~2 DiT-S bundles + causal VAE + headroom
+---
+# Preload Job: fetches bundle artifacts into the registry volume.
+# Runs on registry updates; idempotent (checksums verified at worker load).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-preload
+  namespace: multimodal
+  labels:
+    app.kubernetes.io/name: multimodal
+    app.kubernetes.io/component: registry
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: multimodal
+        app.kubernetes.io/component: registry
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: preload
+          image: ghcr.io/adilshamim8/multimodal-worker:1.0.0
+          command: ["python", "scripts/preload_models.py"]
+          envFrom:
+            - configMapRef:
+                name: multimodal-config
+            - secretRef:
+                name: multimodal-secrets
+          resources:
+            requests: { cpu: "500m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+          volumeMounts:
+            - name: models
+              mountPath: /var/lib/multimodal/models
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: model-registry
