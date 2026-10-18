@@ -1,0 +1,47 @@
+# T2I — SD-style U-Net variant (cross-attention conditioning).
+# Inherits: ../base.yaml
+__base__: ../base.yaml
+
+experiment_name: t2i-unet-base
+output_dir: ${MM_OUTPUT_DIR:./outputs/t2i_unet_base}
+
+# ── Noise schedule ──────────────────────────────────────────────────────────
+num_train_timesteps: 1000
+beta_start: 0.00085
+beta_end: 0.012
+beta_schedule: scaled_linear
+prediction_type: v_prediction
+
+# ── U-Net architecture ──────────────────────────────────────────────────────
+unet_in_channels: 4
+unet_out_channels: 4
+unet_base_channels: 320
+unet_channel_multipliers: [1, 2, 4, 4]
+unet_num_res_blocks: 2
+unet_attention_resolutions: [4, 2, 1]
+unet_num_heads: 8
+unet_head_dim: 64
+unet_dropout: 0.1
+
+# ── Text conditioning ───────────────────────────────────────────────────────
+text_encoder_name: openai/clip-vit-large-patch14
+text_encoder_dim: 768
+cross_attention_dim: 768
+
+# ── Data / training ─────────────────────────────────────────────────────────
+vae_model_path: stabilityai/sd-vae-ft-mse
+tokenizer_name: openai/clip-vit-large-patch14
+max_token_length: 77
+guidance_scale: 7.5
+data_root: ${MM_T2I_DATA_ROOT:./data/laion}
+resolution: 512
+image_size: 512
+latent_size: 64
+batch_size: ${MM_T2I_BATCH:4}
+num_train_steps: 400000
+snr_gamma: 5.0
+ema_decay: 0.9999
+
+optimizer:
+  learning_rate: 1.0e-4
+  warmup_steps: 1000
