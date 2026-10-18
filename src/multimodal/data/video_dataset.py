@@ -3,7 +3,7 @@ from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, ClassVar
 import json
 import random
 import logging
@@ -262,7 +262,7 @@ class VideoStandardizer:
     into a unified format.
     """
 
-    UNIFIED_SCHEMA = {
+    UNIFIED_SCHEMA: ClassVar[Dict[str, type]] = {
         "video_id": str,
         "video_path": str,
         "caption": str,

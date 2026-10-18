@@ -3,7 +3,7 @@ import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 from PIL import Image
 import numpy as np
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Optional, Tuple, Dict, Any, List, ClassVar
 import random
 
 
@@ -71,7 +71,7 @@ class ResolutionBucketTransform:
     Used in SDXL and other production T2I systems.
     """
 
-    BUCKETS = [
+    BUCKETS: ClassVar[List[Tuple[int, int]]] = [
         (512, 512),
         (512, 768),
         (768, 512),
@@ -88,7 +88,7 @@ class ResolutionBucketTransform:
         target_buckets: Optional[List[Tuple[int, int]]] = None,
         random_flip: bool = True,
     ):
-        self.buckets = target_buckets or self.BUCKETS
+        self.buckets = list(target_buckets or self.BUCKETS)
         self.random_flip = random_flip
         self.to_tensor = T.ToTensor()
         self.norm = T.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
