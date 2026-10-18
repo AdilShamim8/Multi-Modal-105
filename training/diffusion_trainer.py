@@ -6,9 +6,9 @@ from accelerate import Accelerator
 from typing import Optional, Dict, Any
 import os
 
-from models.diffusion.noise_scheduler import NoiseScheduler
-from models.diffusion.forward_backward import DiffusionForwardProcess
-from models.diffusion.dit import EMAModel
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.dit import EMAModel
 from multimodal.config.diffusion_config import DiffusionConfig
 from multimodal.utils.logging_utils import MetricLogger
 from multimodal.utils.checkpoint import CheckpointManager

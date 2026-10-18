@@ -7,12 +7,12 @@ import logging
 import json
 import time
 
-from models.vae.vae import AutoencoderKL
-from models.compression.video_vae import VideoAutoencoderKL
-from models.diffusion.dit import DiT, EMAModel
-from models.diffusion.dit_video import VideoDiT
-from models.diffusion.noise_scheduler import NoiseScheduler
-from models.text_encoder import CLIPTextEncoder, T5TextEncoder
+from multimodal.models.vae.vae import AutoencoderKL
+from multimodal.models.compression.video_vae import VideoAutoencoderKL
+from multimodal.models.diffusion.dit import DiT, EMAModel
+from multimodal.models.diffusion.dit_video import VideoDiT
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
 from sampling.ddim_sampler import DDIMSampler
 from sampling.dpm_solver import DPMSolver
 from sampling.ddpm_sampler import DDPMSampler

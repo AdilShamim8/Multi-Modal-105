@@ -12,11 +12,11 @@ import imageio
 import os
 import logging
 
-from models.diffusion.noise_scheduler import NoiseScheduler
-from models.diffusion.forward_backward import DiffusionForwardProcess
-from models.diffusion.dit import EMAModel
-from models.compression.video_vae import VideoAutoencoderKL
-from models.text_encoder import CLIPTextEncoder, T5TextEncoder
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.dit import EMAModel
+from multimodal.models.compression.video_vae import VideoAutoencoderKL
+from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
 from multimodal.config.t2v_config import T2VConfig
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process

@@ -6,8 +6,8 @@ from torch.cuda.amp import GradScaler, autocast
 from typing import Optional, Dict, Any
 import lpips
 
-from models.vae.vae import AutoencoderKL
-from models.gans.discriminator import StyleGAN2Discriminator
+from multimodal.models.vae.vae import AutoencoderKL
+from multimodal.models.gans.discriminator import StyleGAN2Discriminator
 from multimodal.config.vae_config import VAEConfig
 from multimodal.utils.logging_utils import MetricLogger
 from multimodal.utils.checkpoint import CheckpointManager

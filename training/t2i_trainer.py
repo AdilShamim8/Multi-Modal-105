@@ -12,11 +12,11 @@ from PIL import Image
 import numpy as np
 from tqdm import tqdm
 
-from models.diffusion.noise_scheduler import NoiseScheduler
-from models.diffusion.forward_backward import DiffusionForwardProcess
-from models.diffusion.dit import EMAModel
-from models.text_encoder import CLIPTextEncoder
-from models.vae.vae import AutoencoderKL
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.dit import EMAModel
+from multimodal.models.text_encoder import CLIPTextEncoder
+from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.config.t2i_config import T2IConfig
 from multimodal.utils.logging_utils import MetricLogger
 from multimodal.utils.checkpoint import CheckpointManager

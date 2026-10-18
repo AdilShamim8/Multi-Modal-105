@@ -1,6 +1,6 @@
 import torch
 from typing import Optional, Callable
-from models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 
 class DDPMSampler:
