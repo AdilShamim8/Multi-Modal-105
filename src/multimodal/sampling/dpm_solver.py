@@ -1,9 +1,14 @@
+import math
 from collections.abc import Callable
 
 import numpy as np
 import torch
 
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+
+#: Denoising models are invoked as ``model(x, t, **conditioning)``; production
+#: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules.
+Denoiser = Callable[..., torch.Tensor] | torch.nn.Module
 
 
 class DPMSolver:
@@ -39,7 +44,7 @@ class DPMSolver:
 
     def _model_fn(
         self,
-        model: torch.nn.Module,
+        model: Denoiser,
         x: torch.Tensor,
         t_idx: int,
         cond: dict,
@@ -65,9 +70,9 @@ class DPMSolver:
     @torch.no_grad()
     def sample(
         self,
-        model: torch.nn.Module,
+        model: Denoiser,
         shape: tuple,
-        device: torch.device,
+        device: str | torch.device,
         conditioning: dict | None = None,
         num_inference_steps: int = 20,
         guidance_scale: float = 7.5,
@@ -80,6 +85,7 @@ class DPMSolver:
         """
         cond = conditioning or {}
         B = shape[0]
+        device = torch.device(device) if isinstance(device, str) else device
 
         # Build timestep schedule
         timesteps = self._build_timesteps(num_inference_steps)
@@ -169,7 +175,7 @@ class DPMSolver:
             return phi * x + (1 - phi) * x0_pred * (alpha_prev / alpha_t)
         else:
             h = self._lambda(t_prev) - self._lambda(t)
-            return (sigma_prev / sigma_t) * x - (alpha_prev * (torch.exp(-h) - 1)) * x0_pred
+            return (sigma_prev / sigma_t) * x - (alpha_prev * (math.exp(-h) - 1)) * x0_pred
 
     def _dpm_solver_second_order(
         self,
