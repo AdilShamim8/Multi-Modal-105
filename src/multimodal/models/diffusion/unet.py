@@ -319,6 +319,8 @@ class UNet2DConditionModel(nn.Module):
         # ── Encoder (down) path ────────────────────────────────────────────
         self.down_blocks = nn.ModuleList()
         self.down_samples = nn.ModuleList()
+        # Skip-channel stack: MUST mirror forward()'s push sequence exactly
+        # (one push per ResBlock output + one per Downsample output).
         skip_channels = [channels[0]]
         in_ch = channels[0]
 
@@ -330,15 +332,16 @@ class UNet2DConditionModel(nn.Module):
             for j in range(num_res_blocks):
                 block.append(ResBlock(in_ch, out_ch, time_emb_dim, dropout))
                 in_ch = out_ch
+                skip_channels.append(in_ch)
                 if use_attn:
                     block.append(SpatialTransformerBlock(
                         in_ch, num_heads, head_dim, context_dim, dropout=dropout
                     ))
-                skip_channels.append(in_ch)
 
             self.down_blocks.append(block)
             if i < len(channels) - 1:
                 self.down_samples.append(Downsample(in_ch))
+                skip_channels.append(in_ch)   # downsample output is a skip
             else:
                 self.down_samples.append(None)
 
@@ -404,14 +407,15 @@ class UNet2DConditionModel(nn.Module):
         h = self.conv_in(x)
         skips = [h]
 
-        # Down path
+        # Down path: only ResBlock outputs (and downsample outputs) become
+        # skips — attention blocks transform h in place without branching.
         for block, downsample in zip(self.down_blocks, self.down_samples):
             for layer in block:
                 if isinstance(layer, ResBlock):
                     h = layer(h, t_emb)
+                    skips.append(h)
                 elif isinstance(layer, SpatialTransformerBlock):
                     h = layer(h, encoder_hidden_states)
-                skips.append(h)
             if downsample is not None:
                 h = downsample(h)
                 skips.append(h)
