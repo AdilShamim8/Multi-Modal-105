@@ -1,0 +1,24 @@
+# Default CODEOWNERS — the review routing table.
+# Ownership follows the architecture boundaries in docs/architecture/.
+
+# Platform-wide: maintainer signs off on everything default.
+*                        @AdilShamim8
+
+# Core runtime & configuration — highest blast radius.
+/src/multimodal/__init__.py   @AdilShamim8
+/src/multimodal/version.py    @AdilShamim8
+/src/multimodal/config/       @AdilShamim8
+/pyproject.toml               @AdilShamim8
+
+# Model implementations — research correctness reviews.
+/src/multimodal/models/       @AdilShamim8
+
+# Serving plane — availability and security sensitive.
+/src/multimodal/serving/      @AdilShamim8
+/deployments/                 @AdilShamim8
+
+# CI/CD — who merges must watch the pipelines.
+/.github/                     @AdilShamim8
+
+# Documentation & tutorial — accuracy over speed.
+/docs/                        @AdilShamim8
