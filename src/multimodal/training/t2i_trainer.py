@@ -7,7 +7,7 @@ from accelerate.utils import ProjectConfiguration
 import os
 import math
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
