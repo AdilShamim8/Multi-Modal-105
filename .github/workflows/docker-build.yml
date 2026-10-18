@@ -1,0 +1,45 @@
+# PR image builds: prove Dockerfiles build cleanly without pushing.
+# Full push + registry publish happens in release.yml on tags only.
+name: docker-build
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "deployments/docker/**"
+      - "pyproject.toml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build images (no push)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: api
+            dockerfile: deployments/docker/Dockerfile.api
+          - image: worker
+            dockerfile: deployments/docker/Dockerfile.worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.image }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: multimodal/${{ matrix.image }}:pr-${{ github.event.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke the built image
+        run: |
+          docker run --rm --entrypoint python \
+            multimodal/${{ matrix.image }}:pr-${{ github.event.number }} \
+            -c "import multimodal; print('image imports OK', multimodal.__version__)"
