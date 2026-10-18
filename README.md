@@ -6,7 +6,7 @@
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.1%2B-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-served-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/K8s-ready-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-186%20passing-2EA44F?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-213%20passing-2EA44F?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 ![Last audit](https://img.shields.io/badge/last%20audit-2026--10--18-blue?style=flat-square)
 
@@ -124,7 +124,8 @@ docs/                     architecture · operations · models · guides · ADRs
 
 | Gate | Command | Status |
 |---|---|---|
-| Unit tests (CPU, <90 s) | `make test-unit` | 186 passing |
+| Full suite (CPU, <90 s) | `make test-unit` + e2e | 213 passing |
+| One-command gate | `scripts/verify_repo.sh` | compile · imports · manifests · tests |
 | Lint / format | `make lint` | ruff-clean |
 | Type check | `make typecheck` | mypy (lenient, tightening per ADR-002) |
 | Security | CI `security.yml` | gitleaks · pip-audit · CodeQL · Trivy |
