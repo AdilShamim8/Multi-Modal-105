@@ -392,6 +392,18 @@ class MultimodalGenerationAgent:
         videos = ((videos.clamp(-1, 1) + 1) / 2 * 255).byte()
 
         # ── Save output ───────────────────────────────────────────────────
+        # imageio is an optional dependency (t2v extra): import it lazily so
+        # image-only users never pay for it, and video users get an actionable
+        # error instead of a NameError deep inside the export loop.
+        if output_format in ("gif", "mp4"):
+            try:
+                import imageio
+            except ImportError as exc:  # pragma: no cover - exercised only without extras
+                raise ImportError(
+                    "video export requires imageio; install it via "
+                    "'pip install multimodal-agent[t2v]'"
+                ) from exc
+
         elapsed = time.time() - start_time
         saved_paths = []
         all_frames = []
