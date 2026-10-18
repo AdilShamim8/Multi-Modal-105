@@ -11,6 +11,7 @@ from .gan_config import GANConfig
 from .diffusion_config import DiffusionConfig
 from .t2i_config import T2IConfig
 from .t2v_config import T2VConfig
+from .loader import deep_merge, interpolate_env, load_config, load_yaml, to_dataclass
 
 __all__ = [
     "BaseConfig",
@@ -20,4 +21,9 @@ __all__ = [
     "DiffusionConfig",
     "T2IConfig",
     "T2VConfig",
+    "load_config",
+    "load_yaml",
+    "to_dataclass",
+    "deep_merge",
+    "interpolate_env",
 ]
