@@ -1,0 +1,90 @@
+# PR gate: lint → typecheck → unit tests on a CPU-torch matrix.
+# Runtime budget: < 6 minutes. Anything slower belongs in nightly.yml.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "deployments/**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install ruff==0.7.4
+      - run: ruff check src tests scripts
+      - run: ruff format --check src tests scripts
+
+  typecheck:
+    name: typecheck (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install mypy==1.13.0 types-PyYAML
+      - run: mypy src/multimodal
+        continue-on-error: true  # gate tightened incrementally; see ADR-002
+
+  unit-tests:
+    name: unit-tests (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install CPU torch
+        run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install package (test extras)
+        run: pip install -e ".[test]"
+      - name: Run unit suite
+        run: pytest tests/unit -q --maxfail=5 --cov=src/multimodal --cov-report=term
+      - name: Upload coverage artifact
+        if: matrix.python == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: .coverage
+          retention-days: 7
+
+  package-build:
+    name: package builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check dist/*
