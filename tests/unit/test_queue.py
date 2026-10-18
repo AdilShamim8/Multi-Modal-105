@@ -166,8 +166,11 @@ class TestCrashRecovery:
         assert queue.depth() == 0
 
     def test_corrupt_hash_is_dropped(self, queue):
-        queue.redis.queue.append("ghost-job")  # no hash behind it
+        # A processing-list entry with no hash behind it (worker died
+        # between LPUSH and HSET) must be dropped, not crash recovery.
+        queue.redis._list(queue.processing_key).append("ghost-job")
         assert queue.recover_stuck(max_age_s=0) == 0
+        assert queue.processing_depth() == 0
 
 
 class TestHealth:
