@@ -134,6 +134,7 @@ exclude = "docs/"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "strict"  # tests carry explicit @pytest.mark.asyncio markers
 markers = [
     "unit: fast, isolated, CPU-only tests (PR gate)",
     "integration: multi-component tests on CPU (nightly)",
