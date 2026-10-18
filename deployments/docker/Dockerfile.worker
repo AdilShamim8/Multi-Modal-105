@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GPU worker image — queue consumer that executes generation jobs.
+# Build: docker build -f deployments/docker/Dockerfile.worker -t multimodal/worker:1.0.0 .
+# Last audited: 2026-10-18
+# ─────────────────────────────────────────────────────────────────────────────
+FROM multimodal/base:1.0.0
+
+# Weights mount point (populated by the model registry / preload job).
+# Artifacts are written to the shared store, never baked into the image.
+VOLUME ["/var/lib/multimodal/models"]
+
+USER mm
+
+# Workers are killed by K8s with SIGTERM; the app drains gracefully
+# (in-flight jobs finish, queued jobs survive in Redis).
+STOPSIGNAL SIGTERM
+
+COPY deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+USER root
+RUN chmod +x /usr/local/bin/entrypoint.sh
+USER mm
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
+CMD ["worker"]
