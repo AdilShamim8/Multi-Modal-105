@@ -6,6 +6,8 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
+from multimodal.models.vae.vae import AutoencoderKL
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +24,7 @@ class LatentCacheBuilder:
 
     def __init__(
         self,
-        vae: torch.nn.Module,
+        vae: AutoencoderKL,
         source_dataset: Dataset,
         cache_dir: str,
         device: str = "cuda",
@@ -63,17 +65,17 @@ class LatentCacheBuilder:
         for batch in tqdm(loader, desc="Encoding latents"):
             images = batch["image"].to(self.device)
 
-            # VAE encode
-            latents = self.vae.encode_to_latent(images)  # (B, 4, H/8, W/8)
-            latents = latents.cpu().numpy().astype(np.float16)
+            # VAE encode (fresh variable: mypy binds latents as Tensor first)
+            batch_latents = self.vae.encode_to_latent(images)  # (B, 4, H/8, W/8)
+            latents_np: np.ndarray = batch_latents.cpu().numpy().astype(np.float16)
 
             # Save per-sample
-            for i in range(latents.shape[0]):
+            for i in range(latents_np.shape[0]):
                 sample_path = self.cache_dir / f"{global_idx:08d}"
                 sample_path.mkdir(exist_ok=True)
 
                 # Latent
-                np.save(sample_path / "latent.npy", latents[i])
+                np.save(sample_path / "latent.npy", latents_np[i])
 
                 # Metadata (caption, input_ids, etc.)
                 meta = {}
