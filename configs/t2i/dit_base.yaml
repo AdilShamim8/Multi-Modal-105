@@ -1,0 +1,55 @@
+# T2I — DiT-base at 512px latent diffusion.
+# Inherits: ../base.yaml
+__base__: ../base.yaml
+
+experiment_name: t2i-dit-base
+output_dir: ${MM_OUTPUT_DIR:./outputs/t2i_dit_base}
+
+# ── Noise schedule ──────────────────────────────────────────────────────────
+num_train_timesteps: 1000
+beta_start: 0.00085
+beta_end: 0.012
+beta_schedule: scaled_linear
+prediction_type: v_prediction
+clip_sample: false
+
+# ── DiT architecture (adaLN-Zero) ───────────────────────────────────────────
+dit_patch_size: 2
+dit_depth: 28
+dit_hidden_size: 1152
+dit_num_heads: 16
+dit_mlp_ratio: 4.0
+dit_class_dropout_prob: 0.1
+dit_num_classes: 1000
+dit_learn_sigma: true
+
+# ── Text conditioning ───────────────────────────────────────────────────────
+text_encoder_name: openai/clip-vit-large-patch14
+text_encoder_dim: 768
+cross_attention_dim: 768
+
+# ── Data ────────────────────────────────────────────────────────────────────
+vae_model_path: stabilityai/sd-vae-ft-mse
+tokenizer_name: openai/clip-vit-large-patch14
+max_token_length: 77
+guidance_scale: 7.5
+data_root: ${MM_T2I_DATA_ROOT:./data/laion}
+resolution: 512
+latent_size: 64
+center_crop: true
+random_flip: true
+min_caption_chars: 5
+min_aesthetic_score: 4.5
+
+# ── Training scale ──────────────────────────────────────────────────────────
+image_size: 512
+batch_size: ${MM_T2I_BATCH:4}
+num_train_steps: 400000
+caption_dropout_prob: 0.1
+snr_gamma: 5.0
+ema_decay: 0.9999
+
+optimizer:
+  learning_rate: 1.0e-4
+  warmup_steps: 1000
+  num_training_steps: 400000
