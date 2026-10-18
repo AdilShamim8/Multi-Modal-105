@@ -4,7 +4,6 @@ import torch
 
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
-
 #: Denoising models are invoked as ``model(x, t, **conditioning)``. Production
 #: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules — both
 #: satisfy this calling convention, so the sampler accepts either.
