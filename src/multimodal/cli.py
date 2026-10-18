@@ -25,7 +25,10 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Multi-Modal Generation Platform control plane",
     )
     parser.add_argument(
-        "--version", action="store_true", help="print version and exit"
+        "--version",
+        action="version",
+        version="multimodal-agent 1.0.0 (released 2026-10-18)",
+        help="print version and exit",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
