@@ -10,7 +10,7 @@ Import cost is kept low: heavy subpackages (models, serving) are imported
 lazily through `__getattr__` so that `import multimodal` is instant even on
 cold starts — important for CLI responsiveness and serverless-style workers.
 
-Release: 1.0.0 (2026-10-18). Maintainer: Adil Shamim.
+Release: 1.0.1 (2026-10-18). Maintainer: Adil Shamim.
 """
 
 from __future__ import annotations

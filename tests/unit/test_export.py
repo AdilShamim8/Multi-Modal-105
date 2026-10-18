@@ -33,7 +33,7 @@ class TestManifest:
 
         manifest = read_manifest(tmp_path)
         assert manifest["format"] == "torchscript"
-        assert manifest["platform_version"] == "1.0.0"
+        assert manifest["platform_version"] == "1.0.1"
         assert manifest["release_date"] == "2026-10-18"
         assert len(manifest["sha256"]) == 64
         assert manifest["bytes"] == out.stat().st_size

@@ -1,10 +1,10 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # API serving image (CPU-friendly; GPU optional for the sync path).
-# Build (local): docker build -f deployments/docker/Dockerfile.api -t multimodal/api:1.0.0 .
+# Build (local): docker build -f deployments/docker/Dockerfile.api -t multimodal/api:1.0.1 .
 # Build (CI):    --build-arg BASE_IMAGE=ghcr.io/<owner>/multimodal-base:<tag>
 # Last audited: 2026-10-18
 # ─────────────────────────────────────────────────────────────────────────────
-ARG BASE_IMAGE=multimodal/base:1.0.0
+ARG BASE_IMAGE=multimodal/base:1.0.1
 FROM ${BASE_IMAGE}
 
 USER root

@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Base training image — shared layers for API and worker images.
 # Pin the CUDA runtime deliberately: driver-forward compatible, reproducible CI.
-# Build: docker build -f deployments/docker/Dockerfile.base -t multimodal/base:1.0.0 .
+# Build: docker build -f deployments/docker/Dockerfile.base -t multimodal/base:1.0.1 .
 # Last audited: 2026-10-18
 # ─────────────────────────────────────────────────────────────────────────────
 FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime AS base

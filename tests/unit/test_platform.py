@@ -47,7 +47,7 @@ class TestCliParser:
         with pytest.raises(SystemExit) as exc:
             main(["--version"])
         assert exc.value.code == 0
-        assert "1.0.0" in capsys.readouterr().out
+        assert "1.0.1" in capsys.readouterr().out
 
     @pytest.mark.parametrize(
         "argv,expected",
