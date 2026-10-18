@@ -57,6 +57,11 @@ class StyleGAN2(nn.Module):
         self.r1_gamma = r1_gamma
         self.lazy_reg_interval = lazy_reg_interval
         # Running mean of w for the truncation trick (updated in eval phases).
+        # Declared explicitly: register_buffer does not create a statically
+        # visible attribute, so lookups fall through to Module.__getattr__'s
+        # Tensor | Module union.
+        self.w_avg: torch.Tensor
+        self.w_avg_n: torch.Tensor
         self.register_buffer("w_avg", torch.zeros(w_dim))
         self.register_buffer("w_avg_n", torch.zeros(()))
 
