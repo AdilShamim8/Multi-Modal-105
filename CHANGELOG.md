@@ -6,9 +6,64 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
-Nothing queued. The next minor will carry: webhooks for job completion,
-Redis-backed distributed rate limiting (multi-replica parity), and the
-spot-instance worker profile. See docs/adr/ for the decision log.
+### Fixed — latent production defects surfaced by the mypy sweep (92 → 0 errors)
+- **`T2IPipeline.from_pretrained` did not exist.** The serving engine calls it
+  for every image-model load; production died with `AttributeError` (tests
+  injected fakes, so 215 green tests never saw it). It now loads registry
+  bundles — checksum-verified manifest, `config.json` architecture dispatch
+  (`dit` | `unet`), `weights.safetensors`, optional `vae.safetensors`, and
+  injectable VAE / text encoder / scheduler for shared-component callers.
+- **`T2VPipeline` did not exist anywhere.** `serving/engine.py` imported it
+  from `agent.pipeline`, which never defined it — every production video job
+  died with `ImportError` before the first denoising step. New module
+  `agent/t2v_pipeline.py`: causal video VAE + VideoDiT + T5/CLIP conditioning
+  behind a deterministic DDIM reverse pass, `generate(...)` → MP4 bytes (or
+  raw frame tensors for tests), `from_pretrained()` video-bundle loading.
+- **`InferenceEngine._run` only read the `images` result key** — any pipeline
+  returning pre-encoded video bytes under `videos` raised
+  `GenerationError('no outputs')`. Accepts `images` / `videos` / `artifacts`.
+- **`T2IEvaluator.from_folder` did not exist** and `mma evaluate` called it
+  plus a `metrics=` kwarg `evaluate_all` never accepted — two `TypeError`s
+  before a single metric. The classmethod builds the evaluator from reference
+  images (FID degrades to `nan` without them), and the CLI maps `--metrics`
+  onto the compute toggles.
+- **`GANTrainer` called APIs that never existed**: `CheckpointManager(
+  checkpoint_dir=, save_every=, keep_last=)`, `save(generator=, discriminator=,
+  ...)`, `MetricLogger(experiment_name=)` — every GAN run and checkpoint save
+  raised `TypeError`. Now uses the real APIs (including the new
+  `CheckpointManager.save(extra_states=...)` for multi-module checkpoints).
+- **`GANConfig.max_grad_norm` and `T2VConfig.max_token_length` were missing** —
+  `AttributeError` on the first GAN training step and at T2V trainer init.
+- **GAN checkpoint metadata crashed `json.dump`**: `vars(config)` leaves the
+  nested `OptimizerConfig` a dataclass; serialized with `dataclasses.asdict`.
+- **`DDPMSampler.sample` rejected the `latents` kwarg** — `img2img` with the
+  ddpm sampler raised `TypeError`. All three samplers now accept `latents`,
+  callable CFG-wrapper models, and `str | torch.device` devices.
+- **Dead code removed from the T2V trainer**: a `DDIMSampler` instance with a
+  `set_timesteps` lambda monkey-patch that never executed.
+- **`verify_repo.sh` could pass without running its steps** (`cmd && ok`
+  AND-lists are exempt from `set -e`): steps run bare with an ERR trap;
+  fault-injection regression test added.
+
+### Changed — type-safety gate
+- `ci.yml`: the mypy step's `continue-on-error` is removed. The codebase is
+  mypy-clean (0 errors, 86 files, mypy 1.13.0) — type errors fail the PR
+  gate from here on (ADR-002's tightening condition is met).
+- `RedisLike` protocol matches redis-py's real stub signatures (names,
+  arity, keywords checkable for both `redis.Redis` and the test fakes).
+- Register-buffer attributes (`w_avg`, `ema_cluster_size`, `pos_embed`, ...)
+  are declared for the type checker; nested `ModuleList` iteration uses
+  zero-cost casts; evaluation `evaluate` signatures gained `Literal`
+  overloads; `MM_ENV` is runtime-validated before its `Literal` cast.
+
+### Tests
+- 10 new regression tests (`tests/unit/test_production_paths.py`) exercise
+  the real bundle-loading paths — every one fails on the pre-repair code.
+- Suite total: 201 unit + 24 e2e/integration.
+
+The next minor will carry: webhooks for job completion, Redis-backed
+distributed rate limiting (multi-replica parity), and the spot-instance
+worker profile. See docs/adr/ for the decision log.
 
 ## [1.0.1] — 2026-10-18
 
