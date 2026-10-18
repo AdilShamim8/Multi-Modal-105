@@ -6,7 +6,9 @@ the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
-Tracked on `main`; see the conventional-commit log for the running diff.
+Nothing queued. The next minor will carry: webhooks for job completion,
+Redis-backed distributed rate limiting (multi-replica parity), and the
+spot-instance worker profile. See docs/adr/ for the decision log.
 
 ## [1.0.0] — 2026-10-18
 
