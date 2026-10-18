@@ -35,9 +35,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-      - run: pip install pip-audit
-      - run: pip-audit --strict --desc "$(git ls-files 'pyproject.toml')"
+      - name: Install the auditor (isolated from the audited set)
+        run: pip install pip-audit
+      - name: Resolve the full runtime dependency set (CPU wheels)
+        run: |
+          python -m venv .audit-env
+          .audit-env/bin/pip install torch torchvision \
+            --index-url https://download.pytorch.org/whl/cpu
+          .audit-env/bin/pip install ".[t2i,t2v,serving]"
+      - name: Audit every pinned package in the resolved environment
+        run: |
+          # freeze emits exactly the resolved tree (auditor excluded: it
+          # lives in the runner env, not .audit-env). CPU wheels carry a
+          # +cpu local version label PyPI does not know; strip it — the
+          # base version maps to the same upstream release.
+          .audit-env/bin/pip freeze \
+            | grep -E '^[a-zA-Z0-9_.-]+==' \
+            | sed -E 's/(==[0-9][^+]+)\+.*/\1/' > audit-env.txt
+          echo "auditing $(wc -l < audit-env.txt) pinned packages"
+          pip-audit --disable-pip --no-deps --strict -r audit-env.txt
 
   codeql:
     name: codeql (python)
