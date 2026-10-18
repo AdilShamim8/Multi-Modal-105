@@ -81,10 +81,10 @@ class T2IEvaluator:
         if compute_fid:
             logger.info("Running FID evaluation...")
             try:
-                # generator_fn for FID takes batch_size
-                fid_gen = lambda bs: generator_fn(bs)
+                # generator_fn already has the (batch_size) -> images signature
+                # that the FID path expects; no adapter needed.
                 fid_score = self.fid_evaluator.compute_fid_from_generator(
-                    generator_fn=fid_gen,
+                    generator_fn=generator_fn,
                     batch_size=self.clip_batch_size,
                 )
                 results["eval/fid"] = fid_score
@@ -96,9 +96,8 @@ class T2IEvaluator:
         if compute_is:
             logger.info("Running Inception Score evaluation...")
             try:
-                is_gen = lambda bs: generator_fn(bs)
                 is_mean, is_std = self.is_evaluator.evaluate(
-                    generator_fn=is_gen,
+                    generator_fn=generator_fn,
                     num_samples=10000,
                     batch_size=self.clip_batch_size,
                 )
@@ -112,7 +111,11 @@ class T2IEvaluator:
         if compute_clip:
             logger.info("Running CLIP Score evaluation...")
             try:
-                clip_gen = lambda prompts: generator_fn(len(prompts), prompts=prompts)
+                def clip_gen(prompts: List[str]):
+                    # CLIP wants (prompts) -> images; the underlying generator
+                    # is batch_size-driven, so derive the batch from the prompts.
+                    return generator_fn(len(prompts), prompts=prompts)
+
                 clip_score, per_sample = self.clip_evaluator.evaluate(
                     generator_fn=clip_gen,
                     prompts=self.eval_prompts,
