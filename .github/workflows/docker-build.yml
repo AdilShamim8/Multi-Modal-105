@@ -18,28 +18,48 @@ jobs:
     name: build images (no push)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - image: api
-            dockerfile: deployments/docker/Dockerfile.api
-          - image: worker
-            dockerfile: deployments/docker/Dockerfile.worker
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
-      - name: Build ${{ matrix.image }} image
+      # Base first: api/worker derive from it via the BASE_IMAGE build-arg.
+      # One job so the locally-built base is visible to the derived builds
+      # and the smoke test (no registry push on PRs).
+      - name: Build base image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: deployments/docker/Dockerfile.base
           push: false
-          tags: multimodal/${{ matrix.image }}:pr-${{ github.event.number }}
+          load: true
+          tags: multimodal-base:pr-${{ github.event.number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Smoke the built image
+      - name: Build api + worker images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployments/docker/Dockerfile.api
+          push: false
+          load: true
+          build-args: |
+            BASE_IMAGE=multimodal-base:pr-${{ github.event.number }}
+          tags: multimodal/api:pr-${{ github.event.number }}
+          cache-from: type=gha
+      - name: Build worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployments/docker/Dockerfile.worker
+          push: false
+          load: true
+          build-args: |
+            BASE_IMAGE=multimodal-base:pr-${{ github.event.number }}
+          tags: multimodal/worker:pr-${{ github.event.number }}
+          cache-from: type=gha
+      - name: Smoke the built images
         run: |
-          docker run --rm --entrypoint python \
-            multimodal/${{ matrix.image }}:pr-${{ github.event.number }} \
-            -c "import multimodal; print('image imports OK', multimodal.__version__)"
+          for img in api worker; do
+            docker run --rm --entrypoint python \
+              multimodal/$img:pr-${{ github.event.number }} \
+              -c "import multimodal; print('$img image imports OK', multimodal.__version__)"
+          done
