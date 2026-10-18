@@ -21,7 +21,7 @@ from multimodal.config.t2i_config import T2IConfig
 from multimodal.utils.logging_utils import MetricLogger
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
-from sampling.ddim_sampler import DDIMSampler
+from multimodal.sampling.ddim_sampler import DDIMSampler
 
 
 class T2ITrainer:

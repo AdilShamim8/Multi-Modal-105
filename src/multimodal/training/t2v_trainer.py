@@ -20,7 +20,7 @@ from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
 from multimodal.config.t2v_config import T2VConfig
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
-from sampling.ddim_sampler import DDIMSampler
+from multimodal.sampling.ddim_sampler import DDIMSampler
 
 logger = logging.getLogger(__name__)
 
