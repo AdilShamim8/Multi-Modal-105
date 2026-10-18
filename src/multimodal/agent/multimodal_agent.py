@@ -380,7 +380,7 @@ class MultimodalGenerationAgent:
                 self.scheduler.timesteps[t_prev_idx] if i < len(self.scheduler.timesteps) - 1 else 0
             )
 
-            t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
+            t_prev_val = int(t_prev.item()) if hasattr(t_prev, "item") else int(t_prev)
 
             alpha_prev = self.scheduler.alphas_cumprod[max(t_prev_val, 0)].to(self.device)
 
@@ -423,12 +423,12 @@ class MultimodalGenerationAgent:
 
             if output_format == "gif":
                 out_file = str(out_p.with_suffix(".gif"))
-                imageio.mimwrite(out_file, frames_np, fps=fps, loop=0)
+                imageio.mimwrite(out_file, list(frames_np), fps=fps, loop=0)
             elif output_format == "mp4":
                 out_file = str(out_p.with_suffix(".mp4"))
                 imageio.mimwrite(
                     out_file,
-                    frames_np,
+                    list(frames_np),
                     fps=fps,
                     quality=8,
                     macro_block_size=1,
