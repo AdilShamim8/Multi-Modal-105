@@ -1,0 +1,100 @@
+# Alert rules — the operational contract for the platform's SLOs
+# (docs/operations/slos.md). Every alert references a runbook action.
+# Severity ladder: page > ticket > info.
+# Last audited: 2026-10-18
+
+groups:
+  - name: multimodal-availability
+    rules:
+      - alert: MmApiDown
+        expr: up{job="multimodal-api"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "API replica {{ $labels.pod }} is down"
+          runbook: "docs/operations/runbook.md#api-replica-down"
+
+      - alert: MmApiErrorRateHigh
+        expr: |
+          sum(rate(mm_api_requests_total{status=~"5.."}[5m])) by (route)
+            / sum(rate(mm_api_requests_total[5m])) by (route) > 0.02
+        for: 10m
+        labels: { severity: page }
+        annotations:
+          summary: "5xx rate {{ $value | humanizePercentage }} on {{ $labels.route }}"
+          runbook: "docs/operations/runbook.md#api-error-rate"
+
+      - alert: MmReadyzFailing
+        expr: probe_success{job="blackbox-readyz"} == 0
+        for: 5m
+        labels: { severity: ticket }
+        annotations:
+          summary: "readiness probes failing — replica pulled from rotation"
+          runbook: "docs/operations/runbook.md#readiness-failing"
+
+  - name: multimodal-capacity
+    rules:
+      - alert: MmQueueBacklogGrowing
+        expr: mm_queue_depth > 500 and deriv(mm_queue_depth[15m]) > 0
+        for: 15m
+        labels: { severity: page }
+        annotations:
+          summary: "queue depth {{ $value }} and rising — generation capacity insufficient"
+          runbook: "docs/operations/runbook.md#queue-backlog"
+
+      - alert: MmQueueNearCapacity
+        expr: mm_queue_depth > 9000
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "queue at {{ $value }}/10000 — admission control about to shed"
+          runbook: "docs/operations/runbook.md#queue-backlog"
+
+      - alert: MmWorkerStarved
+        expr: mm_queue_depth > 50 and count(up{job="multimodal-worker"} == 1) < 2
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "backlog with fewer than 2 healthy workers — check KEDA/GPU pool"
+          runbook: "docs/operations/runbook.md#worker-starvation"
+
+      - alert: MmGenerationFailuresSpike
+        expr: |
+          sum(rate(mm_generations_total{status="failed"}[10m])) by (modality)
+            > 0.05
+        for: 10m
+        labels: { severity: ticket }
+        annotations:
+          summary: "failure rate >3/min for {{ $labels.modality }} — inspect worker logs"
+          runbook: "docs/operations/incident-response.md#generation-failures"
+
+  - name: multimodal-latency
+    rules:
+      - alert: MmLatencyP95Budget
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(mm_generation_latency_seconds_bucket[10m])) by (le, modality)
+          ) > 60
+        for: 30m
+        labels: { severity: ticket }
+        annotations:
+          summary: "generation p95 over 60s for {{ $labels.modality }} (SLO breach)"
+          runbook: "docs/operations/slos.md"
+
+      - alert: MmSyncTimeoutFallbacks
+        expr: sum(rate(mm_api_requests_total{route="/v1/generations",status="202"}[5m])) > 5
+        for: 15m
+        labels: { severity: info }
+        annotations:
+          summary: "sync submissions falling back to queue at >5/min"
+          runbook: "docs/operations/capacity-planning.md"
+
+  - name: multimodal-safety
+    rules:
+      - alert: MmModerationRejectSpike
+        expr: deriv(moderation_rejected_total[30m]) > 10
+        for: 30m
+        labels: { severity: ticket }
+        annotations:
+          summary: "moderation rejections climbing — possible attack or policy drift"
+          runbook: "docs/operations/incident-response.md#moderation-spike"
