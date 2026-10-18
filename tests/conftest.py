@@ -2,8 +2,10 @@
 
 The suite is CPU-first by design (PR gate < 90 s): tiny geometries,
 deterministic seeds, and fakes for anything with a network or GPU.
-`src` is prepended to sys.path so tests run from a checkout without
-installing (CI installs the package; both work).
+Both `src` and the repo root are prepended to sys.path so tests run
+from a bare checkout without installing, and so `from tests.fakes
+import ...` resolves under bare `pytest` (which, unlike `python -m
+pytest`, does not put the CWD on sys.path).
 """
 
 from __future__ import annotations
@@ -13,9 +15,11 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).resolve().parent.parent / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC = _REPO_ROOT / "src"
+for _path in (str(SRC), str(_REPO_ROOT)):
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
 
 
 @pytest.fixture(autouse=True)
