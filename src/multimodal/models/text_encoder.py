@@ -50,7 +50,7 @@ class CLIPTextEncoder(nn.Module):
     def tokenize(
         self,
         texts: str | list[str],
-        device: torch.device | None = None,
+        device: str | torch.device | None = None,
     ) -> dict[str, torch.Tensor]:
         if isinstance(texts, str):
             texts = [texts]
