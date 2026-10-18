@@ -109,3 +109,9 @@ stats: ## Show repo statistics
 	@echo "tracked files : $$(git ls-files | wc -l)"
 	@echo "python files  : $$(git ls-files '*.py' | wc -l)"
 	@echo "lines of py   : $$(git ls-files '*.py' | xargs wc -l | tail -1)"
+
+verify: ## Full local gate: compile, imports, manifests, unit+e2e tests
+	./scripts/verify_repo.sh
+
+verify-fast: ## Same gate, skipping e2e/integration (~60 s)
+	./scripts/verify_repo.sh --fast
