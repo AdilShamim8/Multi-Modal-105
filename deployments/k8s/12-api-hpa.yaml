@@ -1,0 +1,42 @@
+# HPA — CPU-based scaling of the stateless API tier.
+# Queue-driven GPU worker scaling is handled by KEDA (13-worker-keda.yaml).
+# Last audited: 2026-10-18
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: multimodal-api
+  namespace: multimodal
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: multimodal-api
+  minReplicas: 3
+  maxReplicas: 40
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: mm_api_request_latency_p95   # custom metric via prometheus-adapter
+        target:
+          type: AverageValue
+          averageValue: "1s"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+    scaleDown:
+      stabilizationWindowSeconds: 300     # 5 min conservatism: GPU results drain
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
