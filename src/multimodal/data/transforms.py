@@ -43,7 +43,7 @@ class ImageTransform:
         scale = self.resolution / min(w, h)
         new_w = int(round(w * scale))
         new_h = int(round(h * scale))
-        image = image.resize((new_w, new_h), Image.LANCZOS)
+        image = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
         # Crop
         if self.center_crop:
@@ -110,7 +110,7 @@ class ResolutionBucketTransform:
         scale = max(bw / w, bh / h)
         new_w = int(round(w * scale))
         new_h = int(round(h * scale))
-        image = image.resize((new_w, new_h), Image.LANCZOS)
+        image = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
 
         # Center crop to bucket
         image = TF.center_crop(image, (bh, bw))
