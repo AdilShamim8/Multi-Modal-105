@@ -1,0 +1,37 @@
+# Base defaults inherited by every experiment config via `__base__: ../base.yaml`.
+# Environment interpolation: ${VAR} or ${VAR:default} — see multimodal/config/loader.py.
+# Last audited: 2026-10-18.
+
+experiment_name: multimodal-agent
+output_dir: ${MM_OUTPUT_DIR:./outputs}
+seed: 42
+debug: false
+
+device: ${MM_DEVICE:auto}
+num_gpus: 1
+mixed_precision: bf16            # "no" | "fp16" | "bf16"
+gradient_checkpointing: true
+compile_model: false             # torch.compile — enable per-experiment after measuring
+
+log_every_n_steps: 50
+save_every_n_steps: 1000
+eval_every_n_steps: 5000
+use_wandb: ${MM_WANDB_MODE:disabled}
+wandb_project: multimodal-agent
+wandb_entity: null
+
+distributed_backend: nccl
+find_unused_parameters: false
+
+optimizer:
+  optimizer: adamw
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-2
+  beta1: 0.9
+  beta2: 0.999
+  epsilon: 1.0e-8
+  max_grad_norm: 1.0
+  scheduler: cosine
+  warmup_steps: 500
+  num_training_steps: 100000
+  min_lr_ratio: 0.0
