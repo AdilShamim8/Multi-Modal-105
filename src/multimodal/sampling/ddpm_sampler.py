@@ -5,6 +5,12 @@ import torch
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 
+#: Denoising models are invoked as ``model(x, t, **conditioning)``. Production
+#: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules — both
+#: satisfy this calling convention, so the sampler accepts either.
+Denoiser = Callable[..., torch.Tensor] | torch.nn.Module
+
+
 class DDPMSampler:
     """
     DDPM ancestral sampling (Ho et al. 2020).
@@ -17,30 +23,33 @@ class DDPMSampler:
     @torch.no_grad()
     def sample(
         self,
-        model: torch.nn.Module,
+        model: Denoiser,
         shape: tuple,
-        device: torch.device,
+        device: str | torch.device,
         conditioning: dict | None = None,
         num_inference_steps: int = 1000,
         guidance_scale: float = 1.0,
         clip_denoised: bool = True,
         show_progress: bool = True,
         callback: Callable | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Full DDPM reverse diffusion chain.
         Args:
-            model:    denoising model (UNet or DiT)
+            model:    denoising model (UNet or DiT) or CFG-wrapping callable
             shape:    output shape (B, C, H, W)
             device:   compute device
             conditioning: dict with keys like 'text_embeds', 'y', etc.
             guidance_scale: CFG scale (1.0 = no guidance)
+            latents:  optional initial state (img2img / partial denoising);
+                      truncated to the remaining timestep window
         """
         self.scheduler.set_timesteps(num_inference_steps, device=str(device))
         timesteps = self.scheduler.timesteps
 
-        # Start from pure noise
-        x = torch.randn(*shape, device=device)
+        # Start from caller-provided state (img2img) or pure noise
+        x = latents if latents is not None else torch.randn(*shape, device=device)
 
         cond = conditioning or {}
         do_cfg = guidance_scale > 1.0
