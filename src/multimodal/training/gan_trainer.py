@@ -53,13 +53,15 @@ class GANTrainer:
 
         self.ema_gen = StyleGAN2.ema_copy(self.gan.generator, config.ema_beta)
         self.checkpoints = CheckpointManager(
-            checkpoint_dir=checkpoint_dir,
-            save_every=config.save_every_n_steps,
-            keep_last=3,
+            output_dir=checkpoint_dir,
+            max_checkpoints=3,
         )
         self.metrics = MetricLogger(
-            project=config.wandb_project if config.use_wandb else None,
-            experiment_name=f"{config.experiment_name}-gan",
+            project=config.wandb_project if config.use_wandb else "multimodal-agent",
+            name=f"{config.experiment_name}-gan",
+            config={"gan": vars(config)},
+            use_wandb=config.use_wandb,
+            output_dir=config.output_dir,
         )
 
     # ── Single optimization round ─────────────────────────────────────────
@@ -108,7 +110,7 @@ class GANTrainer:
     # ── Sampling for visual regression checks ─────────────────────────────
     @torch.no_grad()
     def generate_samples(self, n: int = 8, truncation_psi: float = 0.7) -> torch.Tensor:
-        grid = []
+        grid: list[torch.Tensor] = []
         for _ in range(0, n, 4):
             batch = min(4, n - len(grid) * 4)
             grid.append(self.gan.sample(batch, truncation_psi=truncation_psi, device=self.device))
@@ -140,10 +142,12 @@ class GANTrainer:
     def _save(self) -> None:
         self.checkpoints.save(
             step=self.step,
-            generator=self.gan.generator.state_dict(),
-            discriminator=self.gan.discriminator.state_dict(),
-            ema_generator=self.ema_gen.state_dict(),
-            optim_g=self.optim_g.state_dict(),
-            optim_d=self.optim_d.state_dict(),
-            config={"gan": vars(self.config)},
+            model=self.gan.generator,
+            optimizer=self.optim_g,
+            ema_model=self.ema_gen,
+            metadata={"gan": vars(self.config)},
+            extra_states={
+                "discriminator": self.gan.discriminator.state_dict(),
+                "optim_d": self.optim_d.state_dict(),
+            },
         )
