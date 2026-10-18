@@ -81,6 +81,11 @@ test = [
     "httpx>=0.25.0",
     "locust>=2.20.0",
     "multimodal-agent[serving]",
+    # The production-path regression tests exercise the real imports the
+    # fake-injection suites never touched: the CLIP/T5 encoders (transformers)
+    # and the GAN trainer's metric logger (wandb).
+    "transformers>=4.35.0",
+    "wandb>=0.16.0",
 ]
 all = ["multimodal-agent[t2i,t2v,serving,train]"]
 
