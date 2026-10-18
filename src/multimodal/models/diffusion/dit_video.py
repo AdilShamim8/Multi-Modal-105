@@ -372,6 +372,9 @@ class VideoDiT(nn.Module):
             grid_h=frame_size // spatial_patch_size,
             grid_w=frame_size // spatial_patch_size,
         )
+        # Declared for the type checker: register_buffer does not surface
+        # attributes statically (Module.__getattr__ is Tensor | Module).
+        self.pos_embed: torch.Tensor
         self.register_buffer("pos_embed", pos_embed.unsqueeze(0))  # (1, N, D)
 
         # ── Timestep embedding ───────────────────────────────────────────
