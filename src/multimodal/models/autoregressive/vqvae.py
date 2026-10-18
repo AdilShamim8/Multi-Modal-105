@@ -27,6 +27,10 @@ class VectorQuantizer(nn.Module):
         nn.init.uniform_(self.embedding.weight, -1 / num_embeddings, 1 / num_embeddings)
 
         if use_ema:
+            # Declared for the type checker: register_buffer does not surface
+            # attributes statically (Module.__getattr__ is Tensor | Module).
+            self.ema_cluster_size: torch.Tensor
+            self.ema_w: torch.Tensor
             self.register_buffer("ema_cluster_size", torch.zeros(num_embeddings))
             self.register_buffer("ema_w", self.embedding.weight.data.clone())
             self.ema_decay = ema_decay
@@ -122,7 +126,7 @@ class VQVAE(nn.Module):
             nn.Tanh(),
         )
 
-    def encode(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def encode(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         z = self.pre_quant(self.encoder(x))
         z_q, vq_loss, indices = self.vq(z)
         return z_q, vq_loss, indices
