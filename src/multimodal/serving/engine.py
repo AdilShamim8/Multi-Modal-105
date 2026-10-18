@@ -78,7 +78,7 @@ class InferenceEngine:
     def _load_t2v(self, path: str) -> Any:
         if not __import__("os").path.isdir(path):
             raise ModelNotFoundError("T2V model directory missing", details={"path": path})
-        from ..agent.pipeline import T2VPipeline
+        from ..agent.t2v_pipeline import T2VPipeline  # heavy import, deferred
 
         return T2VPipeline.from_pretrained(path, device=self.device)
 
@@ -186,7 +186,12 @@ class InferenceEngine:
         result = (
             pipeline(**params) if not hasattr(pipeline, "generate") else pipeline.generate(**params)
         )
-        media = result.get("images", []) if isinstance(result, dict) else result
+        if isinstance(result, dict):
+            # T2I pipelines key PIL images under "images"; the video pipeline
+            # keys pre-encoded MP4 bytes under "videos".
+            media = result.get("images") or result.get("videos") or result.get("artifacts") or []
+        else:
+            media = result
         encoded: list[bytes] = []
         for item in media:
             if hasattr(item, "save"):  # PIL image
