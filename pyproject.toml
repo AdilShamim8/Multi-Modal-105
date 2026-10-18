@@ -1,0 +1,144 @@
+[build-system]
+requires = ["setuptools>=69.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multimodal-agent"
+description = "Production-grade multi-modal generation platform: text-to-image and text-to-video with VAE, GAN, autoregressive, and latent-diffusion architectures"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Adil Shamim" }]
+keywords = ["diffusion", "text-to-image", "text-to-video", "dit", "generative-ai", "production"]
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+    "numpy>=1.24.0",
+    "Pillow>=10.0.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.5.0",
+    "safetensors>=0.4.0",
+    "einops>=0.7.0",
+    "tqdm>=4.66.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+t2i = [
+    "transformers>=4.35.0",
+    "open-clip-torch>=2.23.0",
+    "lpips>=0.1.4",
+]
+t2v = [
+    "opencv-python>=4.8.0",
+    "imageio>=2.31.0",
+    "imageio-ffmpeg>=0.4.9",
+    "decord>=0.6.0",
+    "pandas>=2.0.0",
+    "pyarrow>=13.0.0",
+]
+serving = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "redis>=5.0.0",
+    "prometheus-client>=0.19.0",
+    "opentelemetry-api>=1.21.0",
+    "opentelemetry-sdk>=1.21.0",
+    "boto3>=1.28.0",
+]
+dev = [
+    "ruff>=0.7.0",
+    "mypy>=1.7.0",
+    "pre-commit>=3.5.0",
+    "build>=1.0.0",
+    "pip-audit>=2.6.0",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.25.0",
+    "locust>=2.20.0",
+]
+all = ["multimodal-agent[t2i,t2v,serving]"]
+
+[project.urls]
+Homepage = "https://github.com/AdilShamim8/Multi-Modal-105"
+Documentation = "https://github.com/AdilShamim8/Multi-Modal-105/tree/main/docs"
+Tutorial = "https://github.com/AdilShamim8/Multi-Modal-105/blob/main/docs/tutorial/Tutorial-105.md"
+"Bug Tracker" = "https://github.com/AdilShamim8/Multi-Modal-105/issues"
+Changelog = "https://github.com/AdilShamim8/Multi-Modal-105/blob/main/CHANGELOG.md"
+
+[project.scripts]
+mma = "multimodal.cli:main"
+mma-agent = "multimodal.agent.multimodal_agent:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "multimodal.version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"multimodal" = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+exclude = ["docs/tutorial"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",        # pycodestyle / pyflakes
+    "I",                  # import ordering
+    "B",                  # bugbear
+    "UP",                 # pyupgrade
+    "C4",                 # comprehensions
+    "SIM",                # simplify
+    "RUF",                # ruff-specific
+]
+ignore = [
+    "E501",   # line length handled by formatter
+    "B008",   # FastAPI dependency defaults are intentional
+    "RUF001", # docstrings intentionally use unicode box chars
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.mypy]
+python_version = "3.10"
+mypy_path = "src"
+ignore_missing_imports = true
+warn_unused_ignores = false
+check_untyped_defs = false
+no_strict_optional = true
+exclude = "docs/"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: fast, isolated, CPU-only tests (PR gate)",
+    "integration: multi-component tests on CPU (nightly)",
+    "e2e: end-to-end API tests with a live app instance",
+    "load: performance scenarios (locust, manual trigger)",
+    "slow: > 60s tests, excluded from quick loops",
+]
+addopts = "-ra --strict-markers"
+filterwarnings = ["ignore::DeprecationWarning"]
