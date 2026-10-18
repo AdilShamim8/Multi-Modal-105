@@ -1,0 +1,48 @@
+# API Service + Ingress — traffic entry for the generation platform.
+# Artifacts are served from object storage/CDN, NOT through this path:
+# the API only handles control-plane traffic (job submission/status).
+# Last audited: 2026-10-18
+apiVersion: v1
+kind: Service
+metadata:
+  name: multimodal-api
+  namespace: multimodal
+  labels:
+    app.kubernetes.io/name: multimodal
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: multimodal
+    app.kubernetes.io/component: api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multimodal-api
+  namespace: multimodal
+  annotations:
+    # Rate limiting at the edge duplicates app-level limits (defence in depth).
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "200"
+    nginx.ingress.kubernetes.io/proxy-body-size: "256k"   # prompts only
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: ["api.multimodal.example.com"]
+      secretName: multimodal-api-tls
+  rules:
+    - host: api.multimodal.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: multimodal-api
+                port: { number: 80 }
