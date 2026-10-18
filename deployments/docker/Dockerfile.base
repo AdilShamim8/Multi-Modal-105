@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Base training image — shared layers for API and worker images.
+# Pin the CUDA runtime deliberately: driver-forward compatible, reproducible CI.
+# Build: docker build -f deployments/docker/Dockerfile.base -t multimodal/base:1.0.0 .
+# Last audited: 2026-10-18
+# ─────────────────────────────────────────────────────────────────────────────
+FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime AS base
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    MM_ENV=production
+
+# ── OS deps (kept minimal; security scans gate this layer) ──────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Non-root runtime user ────────────────────────────────────────────────────
+RUN groupadd -g 10001 mm && useradd -u 10001 -g mm -m -s /usr/sbin/nologin mm \
+    && mkdir -p /var/lib/multimodal/models /var/lib/multimodal/artifacts \
+    && chown -R mm:mm /var/lib/multimodal
+WORKDIR /app
+
+# ── Python deps: wheels first (layer cache), then the package ────────────────
+COPY pyproject.toml README.md ./
+COPY src ./src
+RUN pip install --no-cache-dir -e ".[t2i,t2v,serving]"
+
+USER mm
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["python", "-c", "import multimodal; print(multimodal.__version__)"]
