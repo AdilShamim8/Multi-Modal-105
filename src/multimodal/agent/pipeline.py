@@ -8,9 +8,9 @@ import logging
 from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.models.text_encoder import CLIPTextEncoder
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
-from sampling.ddim_sampler import DDIMSampler
-from sampling.dpm_solver import DPMSolver
-from sampling.ddpm_sampler import DDPMSampler
+from multimodal.sampling.ddim_sampler import DDIMSampler
+from multimodal.sampling.dpm_solver import DPMSolver
+from multimodal.sampling.ddpm_sampler import DDPMSampler
 
 logger = logging.getLogger(__name__)
 

@@ -13,10 +13,10 @@ from multimodal.models.diffusion.dit import DiT, EMAModel
 from multimodal.models.diffusion.dit_video import VideoDiT
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
-from sampling.ddim_sampler import DDIMSampler
-from sampling.dpm_solver import DPMSolver
-from sampling.ddpm_sampler import DDPMSampler
-from agent.pipeline import T2IPipeline
+from multimodal.sampling.ddim_sampler import DDIMSampler
+from multimodal.sampling.dpm_solver import DPMSolver
+from multimodal.sampling.ddpm_sampler import DDPMSampler
+from multimodal.agent.pipeline import T2IPipeline
 
 logger = logging.getLogger(__name__)
 
