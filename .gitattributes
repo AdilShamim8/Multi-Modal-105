@@ -1,0 +1,39 @@
+# Normalize line endings: text files get LF in the repo, LF on checkout (Linux servers).
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Source / docs
+*.py text diff=python
+*.md text
+*.yaml text
+*.yml text
+*.toml text
+*.cfg text
+*.ini text
+*.json text
+*.sh text
+*.tf text
+*.hcl text
+Dockerfile text
+
+# Binary assets — never diff/merge
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.npz binary
+*.npy binary
+*.pt binary
+*.pth binary
+*.safetensors binary
+*.onnx binary
+*.mp4 binary
+*.tar binary
+*.gz binary
