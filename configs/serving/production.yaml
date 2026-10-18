@@ -1,0 +1,44 @@
+# Serving plane — production deployment profile.
+# Mirrors the MM_* environment variables (multimodal/serving/config.py).
+# Deployed via ConfigMap; secrets are NEVER placed here.
+# Last audited: 2026-10-18.
+
+env: production
+host: 0.0.0.0
+port: 8000
+api_workers: 4
+
+redis_url: ${MM_REDIS_URL:redis://redis:6379/0}
+queue_name: mm:generation:jobs
+queue_max_depth: 10000
+job_ttl_s: 86400
+job_recovery_max_age_s: 600
+
+max_steps: 100
+max_batch_size: 8
+max_video_frames: 64
+sync_timeout_s: 30
+
+model_dir: /var/lib/multimodal/models
+t2i_model: t2i-dit-s2
+t2v_model: t2v-dit-b2
+default_sampler: dpm++
+default_steps: 30
+default_guidance: 7.5
+
+artifact_store: s3              # local | s3
+artifact_dir: /var/lib/multimodal/artifacts
+s3_bucket: multimodal-artifacts
+s3_region: us-east-1
+presign_ttl_s: 3600
+
+moderation_enabled: true
+moderation_mode: both           # blocklist + classifier in production
+
+auth_enabled: true
+# api_keys intentionally absent — injected from the secret store at runtime.
+
+metrics_enabled: true
+tracing_enabled: true
+otel_endpoint: http://otel-collector:4317
+service_name: multimodal-api
