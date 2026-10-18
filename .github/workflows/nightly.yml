@@ -1,0 +1,71 @@
+# Nightly: slower integration + e2e + API load smoke on CPU.
+# Runs the full quality bar that would make PRs unacceptably slow.
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # 02:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[test,t2i,t2v,serving]"
+      - run: pytest tests/integration -q --maxfail=3
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: integration-failure-logs
+          path: logs/
+
+  e2e:
+    name: api end-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[test,serving]"
+      - name: Bring up local stack (redis via service container)
+        run: |
+          docker run -d --rm --name redis -p 6379:6379 redis:7-alpine
+          sleep 3
+          python -m multimodal.cli serve --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/healthz && break; sleep 2; done
+      - run: pytest tests/e2e -q
+      - name: Teardown
+        if: always()
+        run: docker stop redis || true
+
+  load-smoke:
+    name: load smoke (locust)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[test,serving]"
+      - run: |
+          python -m multimodal.cli serve --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/healthz && break; sleep 2; done
+          locust -f tests/load/locustfile.py --headless -u 20 -r 5 -t 60s \
+            --only-summary --exit-code-on-error 1 || exit 1
