@@ -5,6 +5,10 @@ import torch
 
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
+#: Denoising models are invoked as ``model(x, t, **conditioning)``; production
+#: pipelines pass CFG wrapper callables, trainers pass raw nn.Modules.
+Denoiser = Callable[..., torch.Tensor] | torch.nn.Module
+
 
 class DDIMSampler:
     """
@@ -25,9 +29,9 @@ class DDIMSampler:
     @torch.no_grad()
     def sample(
         self,
-        model: torch.nn.Module,
+        model: Denoiser,
         shape: tuple,
-        device: torch.device,
+        device: str | torch.device,
         conditioning: dict | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
@@ -44,6 +48,7 @@ class DDIMSampler:
         timesteps = self._get_ddim_timesteps(
             num_inference_steps, self.scheduler.num_train_timesteps
         )
+        device = torch.device(device) if isinstance(device, str) else device
         cond = conditioning or {}
         do_cfg = guidance_scale > 1.0
 
