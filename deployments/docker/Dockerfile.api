@@ -11,6 +11,10 @@ USER root
 # Runtime deps only for the API plane (torch already in base).
 RUN pip install --no-cache-dir uvicorn[standard]
 
+# Executable bit set at COPY time (BuildKit): no USER-root dance needed
+# and the image never carries a chmod layer for the entrypoint.
+COPY --chmod=755 deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
 USER mm
 EXPOSE 8000
 
@@ -18,8 +22,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -sf http://127.0.0.1:8000/healthz || exit 1
 
-# Managed by entrypoint: uvicorn workers, then exec for signal fidelity.
-COPY deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["api"]

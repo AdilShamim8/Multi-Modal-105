@@ -11,15 +11,13 @@ FROM ${BASE_IMAGE}
 # Artifacts are written to the shared store, never baked into the image.
 VOLUME ["/var/lib/multimodal/models"]
 
-USER mm
-
 # Workers are killed by K8s with SIGTERM; the app drains gracefully
 # (in-flight jobs finish, queued jobs survive in Redis).
 STOPSIGNAL SIGTERM
 
-COPY deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-USER root
-RUN chmod +x /usr/local/bin/entrypoint.sh
 USER mm
+
+# Executable bit set at COPY time (BuildKit): no USER-root dance needed.
+COPY --chmod=755 deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["worker"]
