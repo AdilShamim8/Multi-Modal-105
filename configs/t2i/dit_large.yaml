@@ -1,0 +1,24 @@
+# T2I — DiT-Large variant (24" latent, deeper stack).
+# Scales dit_base for a dedicated high-capacity training run.
+# Inherits: ../base.yaml → dit_base.yaml chain.
+__base__: dit_base.yaml
+
+experiment_name: t2i-dit-large
+output_dir: ${MM_OUTPUT_DIR:./outputs/t2i_dit_large}
+
+dit_depth: 36
+dit_hidden_size: 1408
+dit_num_heads: 16
+
+batch_size: ${MM_T2I_BATCH:2}         # larger model, smaller per-GPU batch
+num_train_steps: 600000
+
+optimizer:
+  learning_rate: 8.0e-5               # deeper stacks prefer lower peak LR
+  warmup_steps: 2000
+  num_training_steps: 600000
+
+# Notes for operators:
+# - Parameter count ≈ 680M; checkpoint ~2.7 GB fp16 — sharded saves on.
+# - At this size, activation_offload should be benchmarked before enabling
+#   (bandwidth-bound step times can WORSEN with offload).
