@@ -10,6 +10,62 @@ Nothing queued. The next minor will carry: webhooks for job completion,
 Redis-backed distributed rate limiting (multi-replica parity), and the
 spot-instance worker profile. See docs/adr/ for the decision log.
 
+## [1.0.1] — 2026-10-18
+
+**Pipeline repair release.** The 1.0.0 tag was cut before the CI/CD
+surfaces had ever run to completion: four of its checks failed and no
+container images or distribution artifacts were published. This release
+makes every gate green and ships the first working release pipeline.
+
+**Verified at release (2026-10-18):** `ci` and `security` workflows fully
+green on main (lint, mypy, unit tests on 3.10/3.11/3.12, package builds,
+gitleaks, pip-audit, CodeQL, trivy) · 213 passing tests · 578 lint
+findings eliminated.
+
+### Fixed — CI/CD
+- `release`: image tags embedded the mixed-case owner `AdilShamim8`,
+  which GHCR rejects ("repository name must be lowercase"); the owner is
+  now lowercased once per job via bash parameter expansion.
+- `release`: api/worker images built `FROM multimodal/base:1.0.0`, an
+  image no pipeline ever produced. A `containers-base` job now builds
+  and pushes the base image to GHCR first; derived images consume it
+  via the new `BASE_IMAGE` build-arg. `workflow_dispatch` releases check
+  out the requested tag.
+- `docker-build` (PR gate): same missing-base defect, plus buildx images
+  were never `load`ed, so the smoke test could not see them. Base now
+  builds locally per PR; all images load into the daemon and smoke-test.
+- `security/trivy`: pinned `aquasecurity/trivy-action@0.28.0` did not
+  exist (tags are `v`-prefixed) — the job died in 2 s. Now pinned to
+  `v0.36.0`.
+- `security/pip-audit`: the invocation passed `pyproject.toml` to
+  `--desc` and errored before auditing anything. The gate now resolves
+  the complete runtime tree (CPU torch + `.[t2i,t2v,serving]`) in a
+  dedicated venv, freezes it to exact pins, and audits those pins with
+  `--disable-pip --no-deps --strict`.
+
+### Fixed — Code (found by the newly-enforced lint gate)
+- `agent`: `imageio` was referenced but never imported — every gif/mp4
+  export raised `NameError` after minutes of sampling. Lazy import with
+  an actionable install hint.
+- `models`/`training`: missing `Union`/`Tuple` imports (F821).
+- `training/t2i`: `_load_vae` logged "Loaded VAE from HuggingFace" while
+  discarding the loaded object — the log now states the transfer is not
+  implemented.
+- `serving`: `zip(artifacts, extensions)` pairs now enforce
+  `strict=True` — silent truncation would drop artifact files on a 200 OK.
+- 13 dead assignments removed; typing modernized (`X | None`, builtin
+  generics); import order canonicalized; `verify_repo.sh` now runs the
+  same ruff gates as CI so local and remote cannot drift again.
+
+### Fixed — Packaging & Tests
+- `test` extra now installs the serving plane (`multimodal-agent[serving]`)
+  — CI unit jobs died on `ModuleNotFoundError: redis`. Previously
+  undeclared imports are declared: `starlette` (serving), `scipy` (t2i),
+  and a new `train` extra (`accelerate`, `wandb`, `webdataset`).
+- `tests/` is a real package and `tests/conftest.py` prepends the repo
+  root, so the suite imports identically under bare `pytest` (CI) and
+  `python -m pytest` (local).
+
 ## [1.0.0] — 2026-10-18
 
 The productionization release: the research codebase is reorganized into a
