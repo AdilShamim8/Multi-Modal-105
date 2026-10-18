@@ -1,0 +1,76 @@
+# GPU worker deployment — the generation execution tier.
+# One job (or one continuous batch) at a time per GPU; scale OUT via KEDA,
+# not up: batch memory scales with geometry, so vertical scaling is unsafe.
+# Last audited: 2026-10-18
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multimodal-worker
+  namespace: multimodal
+  labels:
+    app.kubernetes.io/name: multimodal
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2          # baseline; KEDA owns the replica count day-to-day
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0   # drain-safe: replacement starts before old stops
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: multimodal
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: multimodal
+        app.kubernetes.io/component: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9102"
+    spec:
+      terminationGracePeriodSeconds: 120    # bounded by worker drain window
+      securityContext:
+        runAsUser: 10001
+        runAsNonRoot: true
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      priorityClassName: generation-critical
+      containers:
+        - name: worker
+          image: ghcr.io/adilshamim8/multimodal-worker:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: ["/usr/local/bin/entrypoint.sh", "worker"]
+          envFrom:
+            - configMapRef:
+                name: multimodal-config
+            - secretRef:
+                name: multimodal-secrets
+          resources:
+            requests:
+              cpu: "4"
+              memory: "16Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: "32Gi"
+              nvidia.com/gpu: "1"
+          startupProbe:
+            exec:
+              command: ["/bin/sh", "-c", "redis-cli -u $MM_REDIS_URL ping"]
+            periodSeconds: 10
+            failureThreshold: 30
+          volumeMounts:
+            - name: models
+              mountPath: /var/lib/multimodal/models
+              readOnly: true
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: model-registry
