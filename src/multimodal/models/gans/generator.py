@@ -88,10 +88,12 @@ class ModulatedConv2d(nn.Module):
             sigma = weight.pow(2).sum(dim=[2, 3, 4], keepdim=True).sqrt() + 1e-8
             weight = weight / sigma
 
-        # Group convolution trick (batch as groups)
-        weight = weight.view(B * self.out_channels, self.in_channels,
-                             self.kernel_size, self.kernel_size)
-        x = x.view(1, B * C, H, W)
+        # Group convolution trick (batch as groups).
+        # reshape (not view): the broadcast modulation makes `weight`
+        # non-contiguous, which view() rejects at runtime.
+        weight = weight.reshape(B * self.out_channels, self.in_channels,
+                                self.kernel_size, self.kernel_size)
+        x = x.reshape(1, B * C, H, W)
 
         if self.upsample:
             x = F.interpolate(x, scale_factor=2.0, mode="bilinear",
@@ -99,7 +101,7 @@ class ModulatedConv2d(nn.Module):
             _, _, H, W = x.shape
 
         x = F.conv2d(x, weight, padding=self.padding, groups=B)
-        return x.view(B, self.out_channels, x.shape[-2], x.shape[-1])
+        return x.reshape(B, self.out_channels, x.shape[-2], x.shape[-1])
 
 
 class StyleBlock(nn.Module):
