@@ -1,0 +1,39 @@
+# Inference-time sampling profiles (referenced by serving + eval configs).
+# Distinct from training: sampling only needs the schedule + sampler choice.
+# Last audited: 2026-10-18.
+
+defaults:
+  num_train_timesteps: 1000
+  beta_schedule: scaled_linear
+  prediction_type: v_prediction
+
+profiles:
+
+  fast_draft:                 # interactive previews, sync API path
+    sampler: dpm++
+    num_inference_steps: 12
+    guidance_scale: 6.0
+    eta: 0.0
+
+  balanced:                   # default production profile
+    sampler: dpm++
+    num_inference_steps: 30
+    guidance_scale: 7.5
+    eta: 0.0
+
+  high_fidelity:              # marketing assets, offline batch
+    sampler: dpm++
+    num_inference_steps: 50
+    guidance_scale: 8.0
+    eta: 0.0
+
+  ddim_reference:             # deterministic reproducibility (regression tests)
+    sampler: ddim
+    num_inference_steps: 50
+    guidance_scale: 7.5
+    eta: 0.0
+
+  ancestral_baseline:         # DDPM ground truth comparison
+    sampler: ddpm
+    num_inference_steps: 1000
+    guidance_scale: 7.5
