@@ -16,25 +16,38 @@ from multimodal.serving.schemas import new_job_id
 
 
 class FakeRedis:
+    """Name-aware in-memory redis fake: every list/hash is keyed by its
+    Redis key, exactly like the real server (event journals must never
+    leak into the job queue)."""
+
     def __init__(self) -> None:
-        self.queue: list[str] = []
-        self.processing: list[str] = []
+        self.lists: dict[str, list[str]] = {}
         self.hashes: dict[str, dict] = {}
         self.expirations: dict[str, int] = {}
 
-    # Queue operations
+    def _list(self, name: str) -> list[str]:
+        return self.lists.setdefault(name, [])
+
+    # List operations — LPUSH to head, BRPOPLPUSH pops tail → dst (FIFO).
     def lpush(self, name: str, *values: str) -> int:
-        self.queue.extend(values)
-        return len(self.queue)
+        lst = self._list(name)
+        for v in values:
+            lst.insert(0, v)
+        return len(lst)
 
     def llen(self, name: str) -> int:
-        return len(self.queue if name.endswith("jobs") else self.processing)
+        return len(self._list(name))
 
     def brpoplpush(self, src: str, dst: str, timeout: int):
-        return self.queue.pop() if self.queue else None
+        src_list, dst_list = self._list(src), self._list(dst)
+        if not src_list:
+            return None
+        value = src_list.pop()           # tail — FIFO with LPUSH
+        dst_list.append(value)
+        return value
 
     def lrem(self, name: str, count: int, value: str) -> int:
-        lst = self.processing if "processing" in name else self.queue
+        lst = self._list(name)
         removed = 0
         while value in lst:
             lst.remove(value)
@@ -42,15 +55,15 @@ class FakeRedis:
         return removed
 
     def lrange(self, name: str, start: int, end: int) -> list[str]:
-        return list(self.processing)
+        return list(self._list(name))
 
     # Hash operations
     def hset(self, name: str, mapping: dict) -> int:
-        self.hashes[name.split(":")[-1]] = mapping
+        self.hashes[name] = mapping
         return 1
 
     def hgetall(self, name: str) -> dict:
-        return self.hashes.get(name.split(":")[-1], {})
+        return self.hashes.get(name, {})
 
     def expire(self, name: str, seconds: int) -> bool:
         self.expirations[name] = seconds
