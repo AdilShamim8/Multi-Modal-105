@@ -15,18 +15,32 @@
 - [Runbook](operations/runbook.md) — deploy, rollback, queue backlog, drills
 - [Incident Response](operations/incident-response.md) — SEV ladder, safety flows, post-incident template
 - [SLOs & SLIs](operations/slos.md) — targets, error budgets, what is deliberately not an SLO
+- [Game-Day Drills](operations/game-day.md) — seven rehearsed failures with pass criteria
+- [On-Call Onboarding](operations/onboarding.md) — first week on the bench, roster gate
 
 ## Models (how the science works)
 - [VAE](models/vae.md) · [GANs](models/gans.md) · [Autoregressive](models/autoregressive.md) · [Diffusion](models/diffusion.md)
 
 ## Pipelines (how products are built)
 - [Text-to-Image](pipelines/t2i.md) · [Text-to-Video](pipelines/t2v.md)
+- [Data Preparation — Image](guides/data-preparation-t2i.md) · [Data Preparation — Video](guides/data-preparation-t2v.md)
 
 ## Guides (how you use it)
-- [Getting Started](guides/getting-started.md) · [Training](guides/training.md) · [Serving](guides/serving.md) · [Evaluation](guides/evaluation.md)
+- [Getting Started](guides/getting-started.md) · [Training](guides/training.md) ·
+  [Serving](guides/serving.md) · [Evaluation](guides/evaluation.md)
+- [Model Registry](guides/model-registry.md) — bundles, promotion, rollback
+- [API Reference](api-reference.md) — full request/response tables
 
 ## Decisions (why it is this way)
-- ADR index: [001 src layout](adr/001-src-layout.md) · [002 configs](adr/002-config-system.md) · [003 Redis queue](adr/003-redis-queue.md) · [004 async-first](adr/004-async-first-api.md) · [005 bundles](adr/005-safetensors-bundles.md) · [006 DiT primary](adr/006-dit-primary.md) · [007 KEDA](adr/007-keda-autoscaling.md) · [008 limits](adr/008-defence-in-depth.md) · [009 GKE](adr/009-terraform-gke.md)
+- [001 src layout](adr/001-src-layout.md) · [002 configs](adr/002-config-system.md) ·
+  [003 Redis queue](adr/003-redis-queue.md) · [004 async-first](adr/004-async-first-api.md) ·
+  [005 bundles](adr/005-safetensors-bundles.md) · [006 DiT primary](adr/006-dit-primary.md) ·
+  [007 KEDA](adr/007-keda-autoscaling.md) · [008 limits](adr/008-defence-in-depth.md) ·
+  [009 GKE](adr/009-terraform-gke.md) · [010 testing](adr/010-testing-strategy.md) ·
+  [011 metric contract](adr/011-metric-contract.md)
+
+## Reference
+- [FAQ](faq.md) · [Glossary](glossary.md) · [CHANGELOG](../CHANGELOG.md)
 
 ## Learning
 - [Tutorial-105](tutorial/Tutorial-105.md) — the full beginner-to-practitioner tutorial (2 parts)
