@@ -24,7 +24,11 @@ class EqualConv2d(nn.Module):
 
 
 class MinibatchStdDev(nn.Module):
-    """Minibatch standard deviation for improved diversity."""
+    """Minibatch standard deviation for improved diversity.
+
+    Adds one channel holding the per-position std across group members,
+    averaged over positions — the classic StyleGAN2 diversity signal.
+    """
 
     def __init__(self, group_size: int = 4, num_features: int = 1):
         super().__init__()
@@ -34,16 +38,16 @@ class MinibatchStdDev(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, C, H, W = x.shape
         G = min(self.group_size, B)
-        F_ = self.num_features
-        c = C // F_
+        if B % G != 0:               # e.g. B=5, group=4 → degrade to per-sample
+            G = B
+        M = B // G
 
-        # Compute std across groups
-        y = x.view(G, -1, F_, c, H, W)
-        y = y - y.mean(dim=0, keepdim=True)
-        y = y.pow(2).mean(dim=0)
-        y = (y + 1e-8).sqrt()
-        y = y.mean(dim=[1, 2, 3], keepdim=True)
-        y = y.repeat(G, 1, H, W)
+        y = x.view(G, M, C, H, W)                 # (G, M, C, H, W)
+        y = y - y.mean(dim=0, keepdim=True)       # deviation from group mean
+        y = y.pow(2).mean(dim=0)                  # (M, C, H, W) variance
+        y = (y + 1e-8).sqrt()                     # std
+        y = y.mean(dim=[1, 2, 3], keepdim=True)   # (M, 1, 1, 1) scalar/sample
+        y = y.repeat(G, 1, H, W)                  # (B, 1, H, W)
         return torch.cat([x, y], dim=1)
 
 
