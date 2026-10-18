@@ -14,6 +14,10 @@ The productionization release: the research codebase is reorganized into a
 deployable platform with serving, CI/CD, infrastructure, and operations
 documentation. **Curator: @AdilShamim8.**
 
+**Verified at release (2026-10-18):** 219 tracked files · 110 Python
+modules · **213 passing tests** (unit + e2e + integration) · full local
+gate reproducible via `scripts/verify_repo.sh`.
+
 ### Added — Platform & Architecture
 - `src/` layout under the `multimodal` package; all legacy root packages
   migrated with import rewrites (history preserved via `git mv`).
