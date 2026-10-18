@@ -48,6 +48,9 @@ class GANConfig(BaseConfig):
     ema_beta: float = 0.999  # generator weight EMA for evaluation
     style_mixing_prob: float = 0.9  # path regularization via style mixing
     num_train_steps: int = 2_000_000
+    # Adversarial objectives are gradient-unstable by construction; both the
+    # critic and generator are clipped every step (GANTrainer.train_step).
+    max_grad_norm: float = 1.0
 
     optimizer: OptimizerConfig = None
 
