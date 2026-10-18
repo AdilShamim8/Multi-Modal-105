@@ -47,8 +47,16 @@ datasets
 *.tar
 *.zip
 
-# Infra / IDE
-deployments
+# Infra / IDE — keep the container entrypoint in the build context:
+# Dockerfile.api / Dockerfile.worker COPY deployments/docker/entrypoint.sh,
+# and a parent-directory exclusion cannot be re-included portably.
+deployments/k8s
+deployments/monitoring
+deployments/terraform
+deployments/docker/Dockerfile.api
+deployments/docker/Dockerfile.worker
+deployments/docker/Dockerfile.base
+deployments/docker/docker-compose.yml
 terraform
 .idea
 .vscode
