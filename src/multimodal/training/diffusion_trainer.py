@@ -7,6 +7,7 @@ from multimodal.config.diffusion_config import DiffusionConfig
 from multimodal.models.diffusion.dit import EMAModel
 from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
 
@@ -31,7 +32,7 @@ class DiffusionTrainer:
         val_loader: DataLoader | None = None,
         text_encoder: nn.Module | None = None,
         tokenizer=None,
-        vae: nn.Module | None = None,
+        vae: AutoencoderKL | None = None,
     ):
         self.config = config
         self.train_loader = train_loader
