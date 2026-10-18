@@ -34,7 +34,7 @@ jobs:
           tags: multimodal-base:pr-${{ github.event.number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Build api + worker images
+      - name: Build api image
         uses: docker/build-push-action@v6
         with:
           context: .
