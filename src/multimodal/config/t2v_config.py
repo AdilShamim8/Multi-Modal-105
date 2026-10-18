@@ -20,6 +20,9 @@ class T2VConfig(DiffusionConfig):
     frame_size: int = 256
     fps: int = 8
     max_video_length: float = 10.0  # seconds
+    # T5 conditioning window. Video captions run long — 256 tokens covers
+    # the WebVid-style caption distribution without padding waste.
+    max_token_length: int = 256
 
     # ── Video DiT (factorized space-time attention) ───────────────────────
     temporal_attention: bool = True
