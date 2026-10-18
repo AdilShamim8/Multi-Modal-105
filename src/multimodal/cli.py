@@ -248,11 +248,24 @@ def _generate(args: argparse.Namespace) -> int:
 
 
 def _evaluate(args: argparse.Namespace) -> int:
+    import json
+
     from .evaluation.evaluator import T2IEvaluator
 
-    evaluator = T2IEvaluator.from_folder(args.samples_dir, reference_dir=args.reference_dir)
-    report = evaluator.evaluate_all(metrics=args.metrics)
-    print(report)
+    evaluator = T2IEvaluator.from_folder(
+        reference_dir=args.reference_dir,
+        device="cpu",
+    )
+    requested = set(args.metrics or [])
+    report = evaluator.evaluate_from_folder(
+        args.samples_dir,
+        step=0,
+        compute_fid="fid" in requested,
+        compute_is="is" in requested,
+        compute_clip="clip" in requested,
+        compute_diversity="diversity" in requested,
+    )
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
