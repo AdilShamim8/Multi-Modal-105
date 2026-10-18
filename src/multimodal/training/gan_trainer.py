@@ -11,6 +11,8 @@ Consumes: `multimodal.config.gan_config.GANConfig`,
 
 from __future__ import annotations
 
+from dataclasses import asdict
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -145,7 +147,7 @@ class GANTrainer:
             model=self.gan.generator,
             optimizer=self.optim_g,
             ema_model=self.ema_gen,
-            metadata={"gan": vars(self.config)},
+            metadata={"gan": asdict(self.config)},
             extra_states={
                 "discriminator": self.gan.discriminator.state_dict(),
                 "optim_d": self.optim_d.state_dict(),
