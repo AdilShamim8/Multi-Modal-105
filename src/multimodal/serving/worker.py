@@ -153,6 +153,9 @@ class GenerationWorker:
             log.warning("job failed — requeueing for retry", extra={
                 "job_id": job.job_id, "attempt": job.attempts, "error": exc.message,
             })
+            # State machine: record the failure, THEN requeue (FAILED → QUEUED).
+            job.transition(JobStatus.FAILED)
+            self.queue.update(job)
             self.queue.requeue(job)
         else:
             job.transition(JobStatus.FAILED)
