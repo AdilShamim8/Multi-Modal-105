@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.fakes import FakeEngine, FakeRedis
+
 from multimodal.serving.app import create_app
 from multimodal.serving.config import ServingConfig
 from multimodal.serving.queue import JobQueue
-
-from tests.fakes import FakeEngine, FakeRedis
 
 API_KEY = "e2e-test-key"
 
@@ -38,7 +38,7 @@ def client(tmp_path):
         yield test_client
 
 
-def auth(client):  # noqa: ANN001
+def auth(client):
     return {"X-API-Key": API_KEY}
 
 

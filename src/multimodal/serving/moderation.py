@@ -15,8 +15,9 @@ Post-generation re-checks of OUTPUT media are the worker's responsibility
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Optional, Protocol
+from typing import Protocol
 
 from ..exceptions import SafetyError
 from ..logging import get_logger
@@ -36,7 +37,7 @@ _DEFAULT_PATTERNS: tuple[str, ...] = (
 class ModerationVerdict:
     allowed: bool
     reason: str = ""
-    score: Optional[float] = None
+    score: float | None = None
 
 
 class ClassifierHook(Protocol):
@@ -51,7 +52,7 @@ class ModerationGate:
         enabled: bool = True,
         mode: str = "blocklist",
         max_prompt_chars: int = 2000,
-        patterns: Optional[tuple[str, ...]] = None,
+        patterns: tuple[str, ...] | None = None,
     ) -> None:
         self.enabled = enabled
         self.mode = mode
@@ -59,7 +60,7 @@ class ModerationGate:
         self._patterns = [
             re.compile(p, re.IGNORECASE) for p in (patterns or _DEFAULT_PATTERNS)
         ]
-        self._classifier: Optional[ClassifierHook] = None
+        self._classifier: ClassifierHook | None = None
         self._rejected_total = 0
 
     def set_classifier_hook(self, hook: ClassifierHook) -> None:

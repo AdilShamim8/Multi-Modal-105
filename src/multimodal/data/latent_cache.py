@@ -1,10 +1,9 @@
-import torch
-import os
-import numpy as np
-from pathlib import Path
-from torch.utils.data import Dataset, DataLoader
-from typing import Optional, Dict, List
 import logging
+from pathlib import Path
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ class LatentCacheBuilder:
                         continue
                     if isinstance(v, torch.Tensor):
                         meta[k] = v[i].numpy()
-                    elif isinstance(v, (list, tuple)):
+                    elif isinstance(v, list | tuple):
                         meta[k] = v[i]
                     else:
                         meta[k] = v
@@ -115,7 +114,7 @@ class LatentCachedDataset(Dataset):
         self.return_text = return_text
 
         # Discover all samples
-        self.samples: List[Path] = sorted(
+        self.samples: list[Path] = sorted(
             [p for p in self.cache_dir.iterdir() if p.is_dir()],
             key=lambda p: int(p.name),
         )
@@ -124,7 +123,7 @@ class LatentCachedDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         sample_path = self.samples[idx]
 
         # Load latent

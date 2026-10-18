@@ -1,7 +1,6 @@
-import torch
-import torch.nn as nn
+
 import numpy as np
-from typing import Optional, Tuple, Union
+import torch
 
 
 class NoiseScheduler:
@@ -163,7 +162,7 @@ class NoiseScheduler:
         x_start: torch.Tensor,
         x_t: torch.Tensor,
         t: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Compute posterior mean and variance:
         μ_q = coef1*x_0 + coef2*x_t
@@ -250,7 +249,7 @@ class NoiseScheduler:
     def get_loss_weight(
         self,
         timesteps: torch.Tensor,
-        snr_gamma: Optional[float] = 5.0,
+        snr_gamma: float | None = 5.0,
     ) -> torch.Tensor:
         snr_t = self.snr.to(timesteps.device).gather(0, timesteps)
         if snr_gamma is None:

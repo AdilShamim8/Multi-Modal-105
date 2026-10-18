@@ -1,22 +1,22 @@
-import torch
-import numpy as np
-from PIL import Image
-from pathlib import Path
-from typing import Optional, List, Union, Dict, Any, Literal
-import logging
 import json
+import logging
 import time
+from pathlib import Path
+from typing import Any
 
-from multimodal.models.vae.vae import AutoencoderKL
+import torch
+from PIL import Image
+
+from multimodal.agent.pipeline import T2IPipeline
 from multimodal.models.compression.video_vae import VideoAutoencoderKL
-from multimodal.models.diffusion.dit import DiT, EMAModel
+from multimodal.models.diffusion.dit import DiT
 from multimodal.models.diffusion.dit_video import VideoDiT
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
+from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.sampling.ddim_sampler import DDIMSampler
-from multimodal.sampling.dpm_solver import DPMSolver
 from multimodal.sampling.ddpm_sampler import DDPMSampler
-from multimodal.agent.pipeline import T2IPipeline
+from multimodal.sampling.dpm_solver import DPMSolver
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +53,12 @@ class MultimodalGenerationAgent:
         device: str = "cuda",
         dtype: torch.dtype = torch.bfloat16,
         # Model paths
-        t2i_model_path: Optional[str] = None,
-        t2v_model_path: Optional[str] = None,
-        vae_path: Optional[str] = None,
-        video_vae_path: Optional[str] = None,
+        t2i_model_path: str | None = None,
+        t2v_model_path: str | None = None,
+        vae_path: str | None = None,
+        video_vae_path: str | None = None,
         text_encoder_path: str = "openai/clip-vit-large-patch14",
-        t5_encoder_path: Optional[str] = None,
+        t5_encoder_path: str | None = None,
         # Defaults
         default_t2i_steps: int = 30,
         default_t2v_steps: int = 50,
@@ -202,16 +202,16 @@ class MultimodalGenerationAgent:
     @torch.no_grad()
     def generate_image(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         height: int = 512,
         width: int = 512,
-        num_inference_steps: Optional[int] = None,
-        guidance_scale: Optional[float] = None,
+        num_inference_steps: int | None = None,
+        guidance_scale: float | None = None,
         num_images_per_prompt: int = 1,
-        seed: Optional[int] = None,
-        sampler: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        seed: int | None = None,
+        sampler: str | None = None,
+    ) -> dict[str, Any]:
         """
         Generate image(s) from text prompt.
         
@@ -267,17 +267,17 @@ class MultimodalGenerationAgent:
     @torch.no_grad()
     def generate_video(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         num_frames: int = 16,
         frame_size: int = 256,
         fps: int = 8,
-        num_inference_steps: Optional[int] = None,
-        guidance_scale: Optional[float] = None,
-        seed: Optional[int] = None,
+        num_inference_steps: int | None = None,
+        guidance_scale: float | None = None,
+        seed: int | None = None,
         output_format: str = "gif",        # "gif" | "mp4" | "frames"
-        output_path: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        output_path: str | None = None,
+    ) -> dict[str, Any]:
         """
         Generate video from text prompt.
         
@@ -309,7 +309,6 @@ class MultimodalGenerationAgent:
         start_time = time.time()
 
         # ── Encode text ───────────────────────────────────────────────────
-        text_encoder = self.t5_encoder or self.clip_encoder
         if self.t5_encoder:
             pos_tokens = self.t5_encoder.tokenize(prompt)
             neg_tokens = self.t5_encoder.tokenize(negative_prompt)
@@ -378,9 +377,7 @@ class MultimodalGenerationAgent:
                 self.scheduler.timesteps) - 1 else 0
 
             t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
-            t_cur_val = t_cur.item()
 
-            alpha_t = self.scheduler.alphas_cumprod[t_cur_val].to(self.device)
             alpha_prev = self.scheduler.alphas_cumprod[max(t_prev_val, 0)].to(self.device)
 
             eps = self.scheduler.predict_noise_from_x0(latents, t_batch, x0_pred)
@@ -466,12 +463,12 @@ class MultimodalGenerationAgent:
     def edit_image(
         self,
         prompt: str,
-        image: Union[Image.Image, str],
+        image: Image.Image | str,
         strength: float = 0.8,
         guidance_scale: float = 7.5,
         num_inference_steps: int = 50,
-        seed: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        seed: int | None = None,
+    ) -> dict[str, Any]:
         """
         Image-to-image editing via DDIM inversion.
         strength: 0 = preserve input, 1 = full generation
@@ -516,7 +513,7 @@ class MultimodalGenerationAgent:
         else:
             raise ValueError(f"Unknown sampler: {name}")
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> dict[str, Any]:
         """Return model parameter counts and configuration."""
         info = {}
         if self.t2i_model:

@@ -1,16 +1,15 @@
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange, repeat
-from typing import Optional, Tuple
-import math
-import numpy as np
+from einops import rearrange
 
 from .dit import (
-    PatchEmbed, AdaLNZero, FinalLayer,
-    get_2d_sincos_pos_embed, TimestepEmbedding,
+    AdaLNZero,
+    FinalLayer,
+    TimestepEmbedding,
 )
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3D RoPE (Rotary Position Embedding for video)
@@ -148,7 +147,7 @@ class VideoDiTBlock(nn.Module):
         num_heads: int,
         mlp_ratio: float = 4.0,
         cond_dim: int = 1152,
-        context_dim: Optional[int] = 768,
+        context_dim: int | None = 768,
         temporal_heads: int = 8,
         dropout: float = 0.0,
     ):
@@ -219,7 +218,7 @@ class VideoDiTBlock(nn.Module):
         c: torch.Tensor,
         T: int,
         S: int,
-        context: Optional[torch.Tensor] = None,
+        context: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -276,7 +275,7 @@ class VideoPatchEmbed(nn.Module):
             stride=(temporal_patch_size, spatial_patch_size, spatial_patch_size),
         )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, int, int]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, int, int]:
         """
         Args:
             x: (B, C, T, H, W)
@@ -439,8 +438,8 @@ class VideoDiT(nn.Module):
         self,
         x: torch.Tensor,                              # (B, C, T, H, W)
         t: torch.Tensor,                              # (B,) timesteps
-        text_embeds: Optional[torch.Tensor] = None,   # (B, seq, context_dim)
-        text_pool: Optional[torch.Tensor] = None,     # (B, pooled_text_dim)
+        text_embeds: torch.Tensor | None = None,   # (B, seq, context_dim)
+        text_pool: torch.Tensor | None = None,     # (B, pooled_text_dim)
         force_drop_text: bool = False,
     ) -> torch.Tensor:
         B, C, T, H, W = x.shape
@@ -479,10 +478,10 @@ class VideoDiT(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.Tensor,
-        text_embeds: Optional[torch.Tensor] = None,
-        text_pool: Optional[torch.Tensor] = None,
-        null_text_embeds: Optional[torch.Tensor] = None,
-        null_text_pool: Optional[torch.Tensor] = None,
+        text_embeds: torch.Tensor | None = None,
+        text_pool: torch.Tensor | None = None,
+        null_text_embeds: torch.Tensor | None = None,
+        null_text_pool: torch.Tensor | None = None,
         cfg_scale: float = 7.5,
     ) -> torch.Tensor:
         """Classifier-free guidance forward pass."""

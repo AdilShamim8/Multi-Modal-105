@@ -1,3 +1,5 @@
+import logging
+
 import torch
 import torch.nn as nn
 from transformers import (
@@ -5,11 +7,7 @@ from transformers import (
     CLIPTokenizer,
     T5EncoderModel,
     T5Tokenizer,
-    AutoTokenizer,
-    AutoModel,
 )
-from typing import Optional, Dict, List, Union, Tuple
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +49,9 @@ class CLIPTextEncoder(nn.Module):
 
     def tokenize(
         self,
-        texts: Union[str, List[str]],
-        device: Optional[torch.device] = None,
-    ) -> Dict[str, torch.Tensor]:
+        texts: str | list[str],
+        device: torch.device | None = None,
+    ) -> dict[str, torch.Tensor]:
         if isinstance(texts, str):
             texts = [texts]
         tokens = self.tokenizer(
@@ -71,7 +69,7 @@ class CLIPTextEncoder(nn.Module):
     def encode(
         self,
         input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         out = self.text_model(
             input_ids=input_ids,
@@ -86,14 +84,14 @@ class CLIPTextEncoder(nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         return self.encode(input_ids, attention_mask)
 
     def encode_texts(
         self,
-        texts: Union[str, List[str]],
-        device: Optional[torch.device] = None,
+        texts: str | list[str],
+        device: torch.device | None = None,
     ) -> torch.Tensor:
         """Convenience method: tokenize + encode in one call."""
         tokens = self.tokenize(texts, device=device)
@@ -124,9 +122,9 @@ class DualTextEncoder(nn.Module):
         self,
         input_ids1: torch.Tensor,
         input_ids2: torch.Tensor,
-        mask1: Optional[torch.Tensor] = None,
-        mask2: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        mask1: torch.Tensor | None = None,
+        mask2: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Returns:
             prompt_embeds: (B, 77, 2048) concatenated sequence embeddings
@@ -164,7 +162,7 @@ class T5TextEncoder(nn.Module):
                 p.requires_grad_(False)
             self.encoder.eval()
 
-    def tokenize(self, texts: Union[str, List[str]]) -> Dict[str, torch.Tensor]:
+    def tokenize(self, texts: str | list[str]) -> dict[str, torch.Tensor]:
         if isinstance(texts, str):
             texts = [texts]
         return self.tokenizer(
@@ -179,7 +177,7 @@ class T5TextEncoder(nn.Module):
     def forward(
         self,
         input_ids: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         out = self.encoder(
             input_ids=input_ids,

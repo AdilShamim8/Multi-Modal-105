@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Optional, List
+from dataclasses import dataclass
+
 from .base_config import BaseConfig, OptimizerConfig
 
 
@@ -45,7 +45,7 @@ class DiffusionConfig(BaseConfig):
     batch_size: int = 4
     num_train_steps: int = 200_000
     ema_decay: float = 0.9999
-    snr_gamma: Optional[float] = 5.0   # min-SNR weighting
+    snr_gamma: float | None = 5.0   # min-SNR weighting
 
     optimizer: OptimizerConfig = None
 

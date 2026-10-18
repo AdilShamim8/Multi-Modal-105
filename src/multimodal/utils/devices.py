@@ -9,13 +9,13 @@ Rules of the platform:
 from __future__ import annotations
 
 import os
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, Optional
 
 from ..exceptions import DeviceError
 
 
-def resolve_device(requested: Optional[str] = None) -> str:
+def resolve_device(requested: str | None = None) -> str:
     """Resolve the best available device honouring the request and CUDA_VISIBLE_DEVICES.
 
     Preference order: explicit request → cuda (if usable) → mps → cpu.

@@ -1,26 +1,24 @@
+import logging
+import math
+import os
+from pathlib import Path
+
+import imageio
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from accelerate.utils import ProjectConfiguration
-from pathlib import Path
-from typing import Optional, Dict, List, Any
-import math
-import numpy as np
-import imageio
-import os
-import logging
+from torch.utils.data import DataLoader
 
-from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
-from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
-from multimodal.models.diffusion.dit import EMAModel
-from multimodal.models.compression.video_vae import VideoAutoencoderKL
-from multimodal.models.text_encoder import CLIPTextEncoder, T5TextEncoder
 from multimodal.config.t2v_config import T2VConfig
+from multimodal.models.compression.video_vae import VideoAutoencoderKL
+from multimodal.models.diffusion.dit import EMAModel
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.text_encoder import T5TextEncoder
+from multimodal.sampling.ddim_sampler import DDIMSampler
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
-from multimodal.sampling.ddim_sampler import DDIMSampler
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +45,9 @@ class LargeScaleT2VTrainer:
         config: T2VConfig,
         model: nn.Module,
         train_loader: DataLoader,
-        val_loader: Optional[DataLoader] = None,
+        val_loader: DataLoader | None = None,
         resume_from_t2i: bool = True,
-        t2i_checkpoint_path: Optional[str] = None,
+        t2i_checkpoint_path: str | None = None,
     ):
         self.config = config
 
@@ -294,8 +292,8 @@ class LargeScaleT2VTrainer:
         return text_embeds
 
     def train_step(
-        self, batch: Dict[str, torch.Tensor]
-    ) -> Optional[Dict[str, float]]:
+        self, batch: dict[str, torch.Tensor]
+    ) -> dict[str, float] | None:
         self.model.train()
 
         with self.accelerator.accumulate(self.model):
@@ -371,11 +369,11 @@ class LargeScaleT2VTrainer:
     @torch.no_grad()
     def generate_video_samples(
         self,
-        prompts: List[str],
+        prompts: list[str],
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
         fps: int = 8,
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate video samples and save as GIF/MP4 files.
         Returns list of saved file paths.
@@ -409,10 +407,6 @@ class LargeScaleT2VTrainer:
         sampler.set_timesteps = lambda n, d: None  # handled internally
 
         # Manual DDIM loop for video
-        timesteps = np.linspace(
-            self.scheduler.num_train_timesteps - 1, 0,
-            num_inference_steps, dtype=int
-        )
         self.scheduler.set_timesteps(num_inference_steps, str(self.device))
 
         for i, t_val in enumerate(self.scheduler.timesteps):
@@ -439,7 +433,6 @@ class LargeScaleT2VTrainer:
                      else torch.zeros(1, device=self.device)
             t_prev_val = t_prev.item() if hasattr(t_prev, "item") else int(t_prev)
 
-            alpha_t = self.scheduler.alphas_cumprod[t_val].to(self.device)
             alpha_prev = self.scheduler.alphas_cumprod[t_prev_val].to(self.device)
 
             eps = self.scheduler.predict_noise_from_x0(latents, t_batch, x0_pred)

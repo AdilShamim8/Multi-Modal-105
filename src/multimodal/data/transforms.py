@@ -1,10 +1,10 @@
+import random
+from typing import ClassVar
+
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
 from PIL import Image
-import numpy as np
-from typing import Optional, Tuple, Dict, Any, List, ClassVar
-import random
 
 
 class ImageTransform:
@@ -71,7 +71,7 @@ class ResolutionBucketTransform:
     Used in SDXL and other production T2I systems.
     """
 
-    BUCKETS: ClassVar[List[Tuple[int, int]]] = [
+    BUCKETS: ClassVar[list[tuple[int, int]]] = [
         (512, 512),
         (512, 768),
         (768, 512),
@@ -85,7 +85,7 @@ class ResolutionBucketTransform:
 
     def __init__(
         self,
-        target_buckets: Optional[List[Tuple[int, int]]] = None,
+        target_buckets: list[tuple[int, int]] | None = None,
         random_flip: bool = True,
     ):
         self.buckets = list(target_buckets or self.BUCKETS)
@@ -93,7 +93,7 @@ class ResolutionBucketTransform:
         self.to_tensor = T.ToTensor()
         self.norm = T.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
 
-    def find_bucket(self, w: int, h: int) -> Tuple[int, int]:
+    def find_bucket(self, w: int, h: int) -> tuple[int, int]:
         """Find best matching bucket for given image dimensions."""
         aspect = w / h
         best_bucket = min(
@@ -102,7 +102,7 @@ class ResolutionBucketTransform:
         )
         return best_bucket
 
-    def __call__(self, image: Image.Image) -> Tuple[torch.Tensor, Tuple[int, int]]:
+    def __call__(self, image: Image.Image) -> tuple[torch.Tensor, tuple[int, int]]:
         if image.mode != "RGB":
             image = image.convert("RGB")
 

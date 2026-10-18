@@ -1,14 +1,16 @@
-import torch
-import numpy as np
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Callable
-from PIL import Image
 import json
 import logging
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
+import numpy as np
+import torch
+from PIL import Image
+
+from .clip_score import CLIPScoreEvaluator
 from .fid import FIDEvaluator
 from .inception_score import InceptionScoreEvaluator
-from .clip_score import CLIPScoreEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class T2IEvaluator:
     def __init__(
         self,
         real_dataloader,
-        eval_prompts: List[str],
+        eval_prompts: list[str],
         cache_dir: str = "./eval_cache",
         device: str = "cuda",
         fid_num_real: int = 50000,
@@ -65,7 +67,7 @@ class T2IEvaluator:
         compute_is: bool = True,
         compute_clip: bool = True,
         compute_diversity: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run full evaluation suite.
         Args:
@@ -75,7 +77,7 @@ class T2IEvaluator:
         Returns:
             dict of metric_name → value
         """
-        results: Dict[str, Any] = {"step": step}
+        results: dict[str, Any] = {"step": step}
 
         # ── FID ──────────────────────────────────────────────────────────────
         if compute_fid:
@@ -111,7 +113,7 @@ class T2IEvaluator:
         if compute_clip:
             logger.info("Running CLIP Score evaluation...")
             try:
-                def clip_gen(prompts: List[str]):
+                def clip_gen(prompts: list[str]):
                     # CLIP wants (prompts) -> images; the underlying generator
                     # is batch_size-driven, so derive the batch from the prompts.
                     return generator_fn(len(prompts), prompts=prompts)
@@ -146,7 +148,7 @@ class T2IEvaluator:
         results_file = self.results_dir / f"eval_step{step:07d}.json"
         with open(results_file, "w") as f:
             json.dump(
-                {k: float(v) if isinstance(v, (np.floating, float)) else v
+                {k: float(v) if isinstance(v, np.floating | float) else v
                  for k, v in results.items()},
                 f, indent=2
             )
@@ -162,8 +164,8 @@ class T2IEvaluator:
         self,
         fake_image_dir: str,
         step: int,
-        prompts_file: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        prompts_file: str | None = None,
+    ) -> dict[str, Any]:
         """
         Evaluate from a folder of pre-generated images.
         Expects: fake_image_dir/{00000.png, 00001.png, ..., prompts.txt}

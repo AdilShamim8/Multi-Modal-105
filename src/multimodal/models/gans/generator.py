@@ -1,9 +1,8 @@
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange
-import numpy as np
-from typing import Optional
 
 
 class EqualLinear(nn.Module):
@@ -124,7 +123,7 @@ class StyleBlock(nn.Module):
         self,
         x: torch.Tensor,
         w: torch.Tensor,
-        noise: Optional[torch.Tensor] = None,
+        noise: torch.Tensor | None = None,
     ) -> torch.Tensor:
         x = self.conv(x, w)
         if noise is None:
@@ -142,7 +141,7 @@ class ToRGB(nn.Module):
         self.bias = nn.Parameter(torch.zeros(3))
 
     def forward(self, x: torch.Tensor, w: torch.Tensor,
-                skip: Optional[torch.Tensor] = None) -> torch.Tensor:
+                skip: torch.Tensor | None = None) -> torch.Tensor:
         out = self.conv(x, w) + self.bias.view(1, -1, 1, 1)
         if skip is not None:
             out = out + F.interpolate(skip, scale_factor=2.0, mode="bilinear",

@@ -11,7 +11,7 @@ from __future__ import annotations
 import time
 import uuid
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -32,7 +32,7 @@ class GenerationRequest(BaseModel):
 
     prompt: str = Field(..., min_length=1, max_length=2000, description="Text prompt")
     modality: Modality = Modality.IMAGE
-    negative_prompt: Optional[str] = Field(
+    negative_prompt: str | None = Field(
         default=None, max_length=2000, description="What to steer away from (CFG)"
     )
     width: int = Field(default=512, ge=64, le=1024, multiple_of=8)
@@ -44,7 +44,7 @@ class GenerationRequest(BaseModel):
     guidance_scale: float = Field(default=7.5, ge=0.0, le=30.0)
     sampler: Sampler = Sampler.DPM_PLUS_PLUS
     num_outputs: int = Field(default=1, ge=1, le=4)
-    seed: Optional[int] = Field(default=None, ge=0, le=2**31 - 1)
+    seed: int | None = Field(default=None, ge=0, le=2**31 - 1)
     sync: bool = Field(
         default=False,
         description="Wait for the result (bounded by sync timeout) instead of polling",
@@ -52,7 +52,7 @@ class GenerationRequest(BaseModel):
 
     @field_validator("prompt", "negative_prompt")
     @classmethod
-    def _strip(cls, value: Optional[str]) -> Optional[str]:
+    def _strip(cls, value: str | None) -> str | None:
         return value.strip() if isinstance(value, str) else value
 
     @field_validator("num_frames")
@@ -76,9 +76,9 @@ class JobEnvelope(BaseModel):
 class ArtifactOut(BaseModel):
     kind: str
     url: str
-    expires_at: Optional[float] = None
-    bytes: Optional[int] = None
-    checksum: Optional[str] = None
+    expires_at: float | None = None
+    bytes: int | None = None
+    checksum: str | None = None
 
 
 class JobStatusOut(BaseModel):
@@ -86,12 +86,12 @@ class JobStatusOut(BaseModel):
     status: str
     modality: str
     created_at: float
-    started_at: Optional[float] = None
-    finished_at: Optional[float] = None
-    duration_s: Optional[float] = None
-    queue_wait_s: Optional[float] = None
+    started_at: float | None = None
+    finished_at: float | None = None
+    duration_s: float | None = None
+    queue_wait_s: float | None = None
     artifacts: list[ArtifactOut] = Field(default_factory=list)
-    error: Optional[dict[str, Any]] = None
+    error: dict[str, Any] | None = None
     attempts: int = 0
 
 
@@ -101,7 +101,7 @@ class SyncGenerationOut(BaseModel):
     job_id: str
     status: str
     artifacts: list[ArtifactOut]
-    seed_used: Optional[int] = None
+    seed_used: int | None = None
     duration_s: float
 
 
@@ -111,7 +111,7 @@ class ErrorOut(BaseModel):
     code: str
     message: str
     details: dict[str, Any] = Field(default_factory=dict)
-    correlation_id: Optional[str] = None
+    correlation_id: str | None = None
 
 
 class HealthOut(BaseModel):

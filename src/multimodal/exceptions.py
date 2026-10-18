@@ -39,7 +39,7 @@ class ConfigError(MultimodalError):
     code = "config_error"
 
 
-class EnvironmentError(MultimodalError):  # noqa: A001 - deliberate platform name
+class EnvironmentError(MultimodalError):
     """Required environment variable or secret is absent/unusable."""
 
     http_status = 500
@@ -68,7 +68,7 @@ class DeviceError(MultimodalError):
     code = "device_error"
 
 
-class OutOfMemoryError(MultimodalError):  # noqa: A001 - deliberate platform name
+class OutOfMemoryError(MultimodalError):
     """GPU OOM detected; caller should retry with a smaller batch/steps."""
 
     http_status = 503

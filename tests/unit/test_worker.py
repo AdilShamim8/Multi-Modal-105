@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from tests.fakes import FakeEngine, FakeRedis
 
 from multimodal.exceptions import GenerationError
 from multimodal.serving.artifacts import LocalArtifactStore
@@ -13,13 +14,11 @@ from multimodal.serving.schemas import new_job_id
 from multimodal.serving.worker import GenerationWorker
 from multimodal.utils.devices import resolve_device
 
-from tests.fakes import FakeEngine, FakeRedis
-
 
 class FailingEngine(FakeEngine):
     """Fails every execution with a platform error (retry path)."""
 
-    def execute(self, job):  # noqa: ANN001
+    def execute(self, job):
         self.executed.append(job.job_id)
         raise GenerationError("synthetic failure for retry test")
 
@@ -39,7 +38,7 @@ def queue(config):
 
 
 def job(**kwargs):
-    defaults = dict(job_id=new_job_id(), prompt="worker test")
+    defaults = {"job_id": new_job_id(), "prompt": "worker test"}
     defaults.update(kwargs)
     return GenerationJob(**defaults)
 
@@ -115,11 +114,6 @@ class TestDrain:
         assert len(engine.executed) == 3
 
     def test_recovery_requeues_orphans_at_startup(self, config, queue, tmp_path):
-        engine = FakeEngine(config)
-        worker = GenerationWorker(
-            queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
-            max_wait_s=0.0,   # tests flush immediately — no latency budget
-        )
         # Simulate a crashed predecessor: job stuck in processing, RUNNING.
         j = job()
         queue.enqueue(j)

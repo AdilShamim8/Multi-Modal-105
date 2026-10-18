@@ -1,10 +1,9 @@
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from einops import rearrange, repeat
-from typing import Tuple, Optional, Dict
-import numpy as np
-
+from einops import rearrange
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3D Causal Convolution (for temporal causality)
@@ -21,8 +20,8 @@ class CausalConv3d(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Tuple[int, int, int],  # (T, H, W)
-        stride: Tuple[int, int, int] = (1, 1, 1),
+        kernel_size: tuple[int, int, int],  # (T, H, W)
+        stride: tuple[int, int, int] = (1, 1, 1),
         dilation: int = 1,
         bias: bool = True,
     ):
@@ -183,7 +182,7 @@ class VideoEncoder(nn.Module):
         in_channels: int = 3,
         latent_channels: int = 16,
         base_channels: int = 128,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 4),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
         temporal_downsample_times: int = 2,   # 2^2 = 4x temporal compression
         spatial_downsample_times: int = 3,    # 2^3 = 8x spatial compression
@@ -253,7 +252,7 @@ class VideoDecoder(nn.Module):
         out_channels: int = 3,
         latent_channels: int = 16,
         base_channels: int = 128,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 4),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
         temporal_upsample_times: int = 2,
         spatial_upsample_times: int = 3,
@@ -326,7 +325,7 @@ class VideoAutoencoderKL(nn.Module):
         in_channels: int = 3,
         latent_channels: int = 16,
         base_channels: int = 128,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 4),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
         temporal_compression: int = 4,    # T / 4
         spatial_compression: int = 8,     # H,W / 8
@@ -389,7 +388,7 @@ class VideoAutoencoderKL(nn.Module):
 
     def forward(
         self, x: torch.Tensor, sample: bool = True
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         mu, logvar = self.encode(x)
         z = self.sample_latent(mu, logvar) if sample else mu
         recon = self.decode(z)

@@ -6,12 +6,12 @@ loading with environment interpolation lives in `multimodal.config.loader`.
 """
 
 from .base_config import BaseConfig, OptimizerConfig
-from .vae_config import VAEConfig
-from .gan_config import GANConfig
 from .diffusion_config import DiffusionConfig
+from .gan_config import GANConfig
+from .loader import deep_merge, interpolate_env, load_config, load_yaml, to_dataclass
 from .t2i_config import T2IConfig
 from .t2v_config import T2VConfig
-from .loader import deep_merge, interpolate_env, load_config, load_yaml, to_dataclass
+from .vae_config import VAEConfig
 
 __all__ = [
     "BaseConfig",

@@ -84,7 +84,7 @@ class FakeEngine(InferenceEngine):
     def ready(self) -> bool:
         return True
 
-    def execute(self, job):  # noqa: ANN001
+    def execute(self, job):
         from PIL import Image
 
         self.executed.append(job.job_id)

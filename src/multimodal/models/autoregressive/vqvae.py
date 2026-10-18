@@ -1,8 +1,8 @@
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from typing import Tuple, Optional
 
 
 class VectorQuantizer(nn.Module):
@@ -34,7 +34,7 @@ class VectorQuantizer(nn.Module):
 
     def forward(
         self, z: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Args:
             z: (B, D, H, W) continuous embeddings
@@ -88,12 +88,6 @@ class VectorQuantizer(nn.Module):
                 + self.commitment_cost * F.mse_loss(z_q, z.detach())
             )
 
-        perplexity = torch.exp(
-            -torch.sum(
-                encodings.mean(0) * torch.log(encodings.mean(0) + 1e-10)
-            )
-        )
-
         return z_q_st, loss, encoding_indices.view(B, H * W)
 
 
@@ -139,7 +133,7 @@ class VQVAE(nn.Module):
             nn.Tanh(),
         )
 
-    def encode(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def encode(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         z = self.pre_quant(self.encoder(x))
         z_q, vq_loss, indices = self.vq(z)
         return z_q, vq_loss, indices

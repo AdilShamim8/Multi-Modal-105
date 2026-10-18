@@ -1,6 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Optional, List, Tuple
 import os
+from dataclasses import dataclass
 
 
 @dataclass
@@ -24,7 +23,7 @@ class BaseConfig:
     eval_every_n_steps: int = 5000
     use_wandb: bool = True
     wandb_project: str = "multimodal-agent"
-    wandb_entity: Optional[str] = None
+    wandb_entity: str | None = None
 
     # ── Distributed ───────────────────────────────────────────────────────────
     distributed_backend: str = "nccl"

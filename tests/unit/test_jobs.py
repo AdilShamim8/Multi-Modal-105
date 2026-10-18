@@ -10,7 +10,7 @@ from multimodal.serving.schemas import new_job_id
 
 
 def make_job(**kwargs) -> GenerationJob:
-    defaults = dict(job_id=new_job_id(), prompt="a test prompt")
+    defaults = {"job_id": new_job_id(), "prompt": "a test prompt"}
     defaults.update(kwargs)
     return GenerationJob(**defaults)
 

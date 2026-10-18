@@ -8,14 +8,14 @@ PEP 562 so they are only loaded when actually used.
 
 from typing import TYPE_CHECKING
 
-from .seeds import derive_seed, is_seeded, seed_everything
-from .timer import Stopwatch, timer
 from .devices import (
     accelerator_info,
     empty_cache,
     free_device_memory_gb,
     resolve_device,
 )
+from .seeds import derive_seed, is_seeded, seed_everything
+from .timer import Stopwatch, timer
 
 if TYPE_CHECKING:  # pragma: no cover - static analysis only
     from .checkpoint import CheckpointManager
@@ -46,7 +46,7 @@ _LAZY = {
 }
 
 
-def __getattr__(name: str):  # noqa: ANN001 - PEP 562
+def __getattr__(name: str):
     import importlib
 
     target = _LAZY.get(name)

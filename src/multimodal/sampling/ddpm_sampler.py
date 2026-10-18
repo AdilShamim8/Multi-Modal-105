@@ -1,5 +1,7 @@
+from collections.abc import Callable
+
 import torch
-from typing import Optional, Callable
+
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 
@@ -18,12 +20,12 @@ class DDPMSampler:
         model: torch.nn.Module,
         shape: tuple,
         device: torch.device,
-        conditioning: Optional[dict] = None,
+        conditioning: dict | None = None,
         num_inference_steps: int = 1000,
         guidance_scale: float = 1.0,
         clip_denoised: bool = True,
         show_progress: bool = True,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> torch.Tensor:
         """
         Full DDPM reverse diffusion chain.

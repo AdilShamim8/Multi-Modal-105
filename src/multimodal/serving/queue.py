@@ -16,7 +16,7 @@ to multiple downstream consumers ever appears.
 from __future__ import annotations
 
 import time
-from typing import Optional, Protocol
+from typing import Protocol
 
 import redis
 
@@ -32,7 +32,7 @@ class RedisLike(Protocol):
     """Minimal Redis surface used here (satisfied by redis.Redis & fakes)."""
 
     def lpush(self, name: str, *values: str) -> int: ...
-    def brpoplpush(self, src: str, dst: str, timeout: int) -> Optional[str]: ...
+    def brpoplpush(self, src: str, dst: str, timeout: int) -> str | None: ...
     def lrem(self, name: str, count: int, value: str) -> int: ...
     def llen(self, name: str) -> int: ...
     def lrange(self, name: str, start: int, end: int) -> list[str]: ...
@@ -41,7 +41,7 @@ class RedisLike(Protocol):
     def expire(self, name: str, seconds: int) -> bool: ...
     def ping(self) -> bool: ...
     def delete(self, *names: str) -> int: ...
-    def rpoplpush(self, src: str, dst: str) -> Optional[str]: ...
+    def rpoplpush(self, src: str, dst: str) -> str | None: ...
 
 
 class JobQueue:
@@ -92,7 +92,7 @@ class JobQueue:
         return self.redis.llen(self.processing_key)
 
     # ── Consumer side (worker) ────────────────────────────────────────────
-    def dequeue(self, timeout_s: int = 5) -> Optional[GenerationJob]:
+    def dequeue(self, timeout_s: int = 5) -> GenerationJob | None:
         """Blocking pop into the processing list (reliable-queue pattern)."""
         job_id = self.redis.brpoplpush(self.queue_key, self.processing_key, timeout_s)
         if job_id is None:
@@ -111,7 +111,7 @@ class JobQueue:
         self.redis.lpush(self.queue_key, job.job_id)
 
     # ── Crash recovery ────────────────────────────────────────────────────
-    def recover_stuck(self, max_age_s: Optional[int] = None) -> int:
+    def recover_stuck(self, max_age_s: int | None = None) -> int:
         """Requeue jobs stranded in `processing` by dead workers.
 
         Call at worker startup. A job is stuck if its hash shows RUNNING but

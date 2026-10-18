@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .version import __version__, RELEASE_DATE
+from .version import RELEASE_DATE, __version__
 
 if TYPE_CHECKING:  # pragma: no cover - static imports for type checkers only
     from .exceptions import MultimodalError
@@ -40,7 +40,7 @@ _LAZY = {
 }
 
 
-def __getattr__(name: str):  # noqa: ANN001 - PEP 562 module getattr
+def __getattr__(name: str):
     """Lazily resolve a small set of core symbols (PEP 562)."""
     target = _LAZY.get(name)
     if target is None:

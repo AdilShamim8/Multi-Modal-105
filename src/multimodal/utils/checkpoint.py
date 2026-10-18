@@ -1,9 +1,9 @@
-import os
-import torch
 import json
-from typing import Dict, Any, Optional
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any
+
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +28,10 @@ class CheckpointManager:
         self,
         step: int,
         model: torch.nn.Module,
-        optimizer: Optional[torch.optim.Optimizer] = None,
+        optimizer: torch.optim.Optimizer | None = None,
         scheduler=None,
-        ema_model: Optional[torch.nn.Module] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        ema_model: torch.nn.Module | None = None,
+        metadata: dict[str, Any] | None = None,
     ):
         ckpt_path = self.checkpoint_dir / f"checkpoint-{step}"
         ckpt_path.mkdir(exist_ok=True)
@@ -80,13 +80,13 @@ class CheckpointManager:
 
     def load(
         self,
-        checkpoint_path: Optional[str] = None,
-        model: Optional[torch.nn.Module] = None,
-        optimizer: Optional[torch.optim.Optimizer] = None,
+        checkpoint_path: str | None = None,
+        model: torch.nn.Module | None = None,
+        optimizer: torch.optim.Optimizer | None = None,
         scheduler=None,
-        ema_model: Optional[torch.nn.Module] = None,
+        ema_model: torch.nn.Module | None = None,
         strict: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if checkpoint_path is None:
             latest_file = self.checkpoint_dir / "latest.txt"
             if not latest_file.exists():

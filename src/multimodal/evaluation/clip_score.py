@@ -1,11 +1,9 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-from PIL import Image
-from typing import List, Union, Optional, Tuple
-from tqdm import tqdm
 import logging
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +62,7 @@ class CLIPScoreEvaluator:
         return F.normalize(feats, dim=-1)
 
     @torch.no_grad()
-    def encode_texts(self, texts: List[str]) -> torch.Tensor:
+    def encode_texts(self, texts: list[str]) -> torch.Tensor:
         """
         Encode text prompts to CLIP text embeddings.
         Returns:
@@ -90,10 +88,10 @@ class CLIPScoreEvaluator:
     def evaluate(
         self,
         generator_fn,
-        prompts: List[str],
+        prompts: list[str],
         batch_size: int = 32,
         return_per_sample: bool = False,
-    ) -> Union[float, Tuple[float, np.ndarray]]:
+    ) -> float | tuple[float, np.ndarray]:
         """
         Full CLIP score evaluation.
         Args:

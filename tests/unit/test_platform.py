@@ -13,7 +13,6 @@ from multimodal.logging import (
     set_correlation_id,
 )
 from multimodal.serving import metrics
-from multimodal.serving.config import ServingConfig
 from multimodal.serving.schemas import GenerationRequest
 
 

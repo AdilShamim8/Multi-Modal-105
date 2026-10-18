@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 from multimodal.exceptions import RateLimitError, SafetyError
@@ -99,7 +97,7 @@ class TestAuth:
         from starlette.responses import PlainTextResponse
         from starlette.testclient import TestClient
 
-        async def route(request):  # noqa: ANN001
+        async def route(request):
             return PlainTextResponse("ok")
 
         app = Starlette(routes=[])
@@ -117,7 +115,7 @@ class TestAuth:
         from starlette.responses import PlainTextResponse
         from starlette.testclient import TestClient
 
-        async def health(request):  # noqa: ANN001
+        async def health(request):
             return PlainTextResponse("ok")
 
         app = Starlette(routes=[])

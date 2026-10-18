@@ -82,7 +82,7 @@ class ServingConfig(BaseModel):
         return value
 
     @classmethod
-    def from_env(cls) -> "ServingConfig":
+    def from_env(cls) -> ServingConfig:
         """Build the config from MM_* environment variables."""
         keys = [k.strip() for k in (_env("MM_API_KEYS", "") or "").split(",") if k.strip()]
         if not keys:

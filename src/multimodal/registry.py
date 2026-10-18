@@ -9,7 +9,8 @@ to audit what is instantiable in production.
 from __future__ import annotations
 
 import threading
-from typing import Any, Callable, Generic, TypeVar
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar
 
 from .exceptions import ConfigError
 

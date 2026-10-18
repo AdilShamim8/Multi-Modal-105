@@ -1,16 +1,16 @@
-import torch
-import numpy as np
-from PIL import Image
-from pathlib import Path
-from typing import List, Optional, Union, Dict, Any
 import logging
+from typing import Any
 
-from multimodal.models.vae.vae import AutoencoderKL
-from multimodal.models.text_encoder import CLIPTextEncoder
+import numpy as np
+import torch
+from PIL import Image
+
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
+from multimodal.models.text_encoder import CLIPTextEncoder
+from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.sampling.ddim_sampler import DDIMSampler
-from multimodal.sampling.dpm_solver import DPMSolver
 from multimodal.sampling.ddpm_sampler import DDPMSampler
+from multimodal.sampling.dpm_solver import DPMSolver
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +56,17 @@ class T2IPipeline:
     @torch.no_grad()
     def __call__(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         height: int = 512,
         width: int = 512,
-        num_inference_steps: Optional[int] = None,
-        guidance_scale: Optional[float] = None,
+        num_inference_steps: int | None = None,
+        guidance_scale: float | None = None,
         num_images_per_prompt: int = 1,
-        seed: Optional[int] = None,
-        latents: Optional[torch.Tensor] = None,
+        seed: int | None = None,
+        latents: torch.Tensor | None = None,
         return_latents: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate images from text prompt(s).
         Returns:
@@ -149,13 +149,13 @@ class T2IPipeline:
     @torch.no_grad()
     def img2img(
         self,
-        prompt: Union[str, List[str]],
-        init_image: Union[Image.Image, torch.Tensor],
+        prompt: str | list[str],
+        init_image: Image.Image | torch.Tensor,
         strength: float = 0.8,
         guidance_scale: float = 7.5,
         num_inference_steps: int = 50,
-        seed: Optional[int] = None,
-    ) -> List[Image.Image]:
+        seed: int | None = None,
+    ) -> list[Image.Image]:
         """
         Image-to-image generation with DDIM inversion.
         strength: 0 = no change, 1 = full noise

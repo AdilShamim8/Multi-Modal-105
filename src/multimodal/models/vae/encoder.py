@@ -1,8 +1,8 @@
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from typing import Tuple
 
 
 class ResidualBlock(nn.Module):
@@ -81,9 +81,9 @@ class Encoder(nn.Module):
         in_channels: int = 3,
         latent_channels: int = 4,
         base_channels: int = 128,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 8),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 8),
         num_res_blocks: int = 2,
-        attention_resolutions: Tuple[int, ...] = (16,),
+        attention_resolutions: tuple[int, ...] = (16,),
         dropout: float = 0.0,
         double_z: bool = True,                # output mu + logvar
     ):
@@ -96,7 +96,6 @@ class Encoder(nn.Module):
 
         # Downsampling stages
         self.down_blocks = nn.ModuleList()
-        current_res = None   # tracked symbolically; resolution checked at fwd
         in_ch = channels[0]
 
         for i, out_ch in enumerate(channels):

@@ -12,7 +12,6 @@ load balancer is worse than a visible deployment error.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -20,13 +19,13 @@ from fastapi.responses import JSONResponse
 from ..exceptions import JobNotFoundError, MultimodalError
 from ..logging import configure_logging, get_logger
 from ..version import __version__
+from .artifacts import build_artifact_store
 from .auth import APIKeyMiddleware
 from .config import ServingConfig
 from .engine import InferenceEngine
 from .middleware import RequestLifecycleMiddleware
 from .moderation import ModerationGate
 from .queue import JobQueue, connect_redis
-from .artifacts import build_artifact_store
 from .ratelimit import RateLimiter
 from .routes import generation, health
 
@@ -34,11 +33,11 @@ log = get_logger(__name__)
 
 
 def create_app(
-    config: Optional[ServingConfig] = None,
-    engine: Optional[InferenceEngine] = None,
-    queue: Optional[JobQueue] = None,
-    rate_limiter: Optional[RateLimiter] = None,
-    moderation: Optional[ModerationGate] = None,
+    config: ServingConfig | None = None,
+    engine: InferenceEngine | None = None,
+    queue: JobQueue | None = None,
+    rate_limiter: RateLimiter | None = None,
+    moderation: ModerationGate | None = None,
     *,
     load_models_at_startup: bool = True,
 ) -> FastAPI:

@@ -1,27 +1,24 @@
+import math
+import os
+from pathlib import Path
+
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from accelerate import Accelerator
 from accelerate.utils import ProjectConfiguration
-import os
-import math
-from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple
 from PIL import Image
-import numpy as np
-from tqdm import tqdm
+from torch.utils.data import DataLoader
 
-from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
-from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.config.t2i_config import T2IConfig
 from multimodal.models.diffusion.dit import EMAModel
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 from multimodal.models.text_encoder import CLIPTextEncoder
 from multimodal.models.vae.vae import AutoencoderKL
-from multimodal.config.t2i_config import T2IConfig
-from multimodal.utils.logging_utils import MetricLogger
+from multimodal.sampling.ddim_sampler import DDIMSampler
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
-from multimodal.sampling.ddim_sampler import DDIMSampler
 
 
 class T2ITrainer:
@@ -43,7 +40,7 @@ class T2ITrainer:
         config: T2IConfig,
         model: nn.Module,
         train_loader: DataLoader,
-        val_loader: Optional[DataLoader] = None,
+        val_loader: DataLoader | None = None,
     ):
         self.config = config
 
@@ -148,14 +145,12 @@ class T2ITrainer:
             self.vae.load_state_dict(state, strict=False)
             logger_msg = f"Loaded VAE from {vae_path}"
         else:
-            # Try loading from HuggingFace
-            try:
-                from diffusers import AutoencoderKL as DiffusersVAE
-                hf_vae = DiffusersVAE.from_pretrained(vae_path)
-                # Transfer weights (simplified)
-                logger_msg = f"Loaded VAE from HuggingFace: {vae_path}"
-            except Exception:
-                logger_msg = "Using randomly initialized VAE (for debugging)"
+            # HuggingFace path: weight transfer between diffusers' AutoencoderKL and
+            # our VAE is not implemented; do not pretend it loaded.
+            logger_msg = (
+                f"VAE weight transfer from {vae_path} not implemented; "
+                "using random init"
+            )
         print(logger_msg)
 
     def _build_optimizer(self, model: nn.Module, config: T2IConfig):
@@ -213,8 +208,8 @@ class T2ITrainer:
 
     @torch.no_grad()
     def _encode_batch(
-        self, batch: Dict[str, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, batch: dict[str, torch.Tensor]
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Encode images → latents and tokens → text embeddings."""
         # Image → latent
         images = batch["image"].to(self.device)
@@ -237,8 +232,8 @@ class T2ITrainer:
         return latents, text_embeds
 
     def train_step(
-        self, batch: Dict[str, torch.Tensor]
-    ) -> Dict[str, float]:
+        self, batch: dict[str, torch.Tensor]
+    ) -> dict[str, float]:
         self.model.train()
 
         with self.accelerator.accumulate(self.model):
@@ -297,12 +292,12 @@ class T2ITrainer:
     @torch.no_grad()
     def generate_samples(
         self,
-        prompts: List[str],
+        prompts: list[str],
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
         height: int = 512,
         width: int = 512,
-    ) -> List[Image.Image]:
+    ) -> list[Image.Image]:
         """Generate images for qualitative evaluation."""
         self.model.eval()
 
@@ -353,7 +348,7 @@ class T2ITrainer:
 
     def save_sample_grid(
         self,
-        prompts: List[str],
+        prompts: list[str],
         step: int,
         guidance_scale: float = 7.5,
     ):

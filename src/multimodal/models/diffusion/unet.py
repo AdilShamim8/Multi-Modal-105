@@ -1,10 +1,9 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-import math
-from typing import Optional, Tuple, List
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Timestep embedding
@@ -74,8 +73,8 @@ class CrossAttention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        context: Optional[torch.Tensor] = None,
-        mask: Optional[torch.Tensor] = None,
+        context: torch.Tensor | None = None,
+        mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if context is None:
             context = x          # self-attention fallback
@@ -163,7 +162,7 @@ class SpatialTransformerBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        context: Optional[torch.Tensor] = None,
+        context: torch.Tensor | None = None,
     ) -> torch.Tensor:
         B, C, H, W = x.shape
         residual = x
@@ -288,9 +287,9 @@ class UNet2DConditionModel(nn.Module):
         in_channels: int = 4,
         out_channels: int = 4,
         base_channels: int = 320,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 4),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 4),
         num_res_blocks: int = 2,
-        attention_resolutions: Tuple[int, ...] = (4, 2, 1),
+        attention_resolutions: tuple[int, ...] = (4, 2, 1),
         num_heads: int = 8,
         head_dim: int = 64,
         context_dim: int = 768,
@@ -387,8 +386,8 @@ class UNet2DConditionModel(nn.Module):
         self,
         x: torch.Tensor,
         timesteps: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         Args:

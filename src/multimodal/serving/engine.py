@@ -13,7 +13,7 @@ from __future__ import annotations
 import io
 import time
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from ..exceptions import ModelNotFoundError, OutOfMemoryError
 from ..logging import get_logger
@@ -43,7 +43,7 @@ class InferenceEngine:
     production injects `multimodal.agent.pipeline.T2IPipeline`.
     """
 
-    def __init__(self, config: ServingConfig, device: Optional[str] = None) -> None:
+    def __init__(self, config: ServingConfig, device: str | None = None) -> None:
         self.config = config
         self.device = device or resolve_device()
         self.t2i: Any | None = None
@@ -181,7 +181,7 @@ class InferenceEngine:
                 buf = io.BytesIO()
                 item.save(buf, format="PNG")
                 encoded.append(buf.getvalue())
-            elif isinstance(item, (bytes, bytearray)):       # pre-encoded video
+            elif isinstance(item, bytes | bytearray):        # pre-encoded video
                 encoded.append(bytes(item))
         if not encoded:
             from ..exceptions import GenerationError

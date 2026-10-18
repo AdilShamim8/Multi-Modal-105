@@ -1,7 +1,7 @@
+
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional, Dict, Union
+
 from .noise_scheduler import NoiseScheduler
 
 
@@ -20,7 +20,7 @@ class DiffusionForwardProcess:
         batch_size: int,
         device: torch.device,
         low: int = 0,
-        high: Optional[int] = None,
+        high: int | None = None,
     ) -> torch.Tensor:
         """Sample random timesteps uniformly for training."""
         high = high or self.scheduler.num_train_timesteps
@@ -30,8 +30,8 @@ class DiffusionForwardProcess:
         self,
         x_start: torch.Tensor,
         t: torch.Tensor,
-        noise: Optional[torch.Tensor] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        noise: torch.Tensor | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Sample x_t given x_0 and timestep t.
         Returns (x_t, noise) — noise is needed for loss computation.
@@ -48,7 +48,7 @@ class DiffusionForwardProcess:
         x_start: torch.Tensor,
         x_t: torch.Tensor,
         t: torch.Tensor,
-        snr_gamma: Optional[float] = 5.0,
+        snr_gamma: float | None = 5.0,
     ) -> torch.Tensor:
         """
         Compute diffusion training loss with optional SNR weighting.
@@ -90,7 +90,7 @@ class DiffusionBackwardProcess:
         x_t: torch.Tensor,
         t: torch.Tensor,
         clip_denoised: bool = True,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         """
         Compute posterior mean and variance of p(x_{t-1} | x_t).
         """
@@ -120,7 +120,7 @@ class DiffusionBackwardProcess:
         t: torch.Tensor,
         clip_denoised: bool = True,
         return_x0: bool = False,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         One step of DDPM reverse process:
         x_{t-1} ~ p_θ(x_{t-1} | x_t)

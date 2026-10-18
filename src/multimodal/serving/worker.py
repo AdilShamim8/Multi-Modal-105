@@ -11,12 +11,10 @@ Operational contract:
 
 from __future__ import annotations
 
-import logging
+import contextlib
 import signal
 import threading
 import time
-import contextlib
-from typing import Optional
 
 from ..exceptions import GenerationError, MultimodalError, OutOfMemoryError
 from ..logging import get_logger, set_correlation_id
@@ -40,7 +38,7 @@ class GenerationWorker:
         engine: InferenceEngine,
         store: ArtifactStore,
         config: ServingConfig,
-        max_batch: Optional[int] = None,
+        max_batch: int | None = None,
         max_wait_s: float = 0.25,
     ) -> None:
         self.queue = queue
@@ -102,7 +100,7 @@ class GenerationWorker:
             time.sleep(0.1)
 
     # ── Execution ──────────────────────────────────────────────────────────
-    def _execute_batch(self, batch) -> None:  # noqa: ANN001 - Batch
+    def _execute_batch(self, batch) -> None:
         for job in batch.jobs:
             self._begin(job)
         try:
@@ -140,7 +138,7 @@ class GenerationWorker:
             self._fail_or_retry(job, exc)
         except MultimodalError as exc:
             self._fail_or_retry(job, exc)
-        except Exception as exc:  # noqa: BLE001 - worker must never die on one job
+        except Exception as exc:
             self._fail_or_retry(job, GenerationError(
                 f"unhandled worker error: {exc}", details={"type": type(exc).__name__}
             ))

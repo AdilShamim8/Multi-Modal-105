@@ -1,14 +1,12 @@
+import logging
+from pathlib import Path
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
 from scipy import linalg
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torchvision import transforms
-from PIL import Image
-from pathlib import Path
-from typing import List, Optional, Union, Tuple
-import os
-import logging
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
@@ -22,7 +20,7 @@ class InceptionV3Features(nn.Module):
 
     def __init__(self, device: str = "cuda"):
         super().__init__()
-        from torchvision.models import inception_v3, Inception_V3_Weights
+        from torchvision.models import Inception_V3_Weights, inception_v3
         self.device = device
 
         inception = inception_v3(weights=Inception_V3_Weights.IMAGENET1K_V1)
@@ -82,7 +80,7 @@ class InceptionV3Features(nn.Module):
         self,
         dataloader: DataLoader,
         max_samples: int = 50000,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Compute mean and covariance of Inception features for a dataset.
         Returns:
@@ -93,7 +91,7 @@ class InceptionV3Features(nn.Module):
         total = 0
 
         for batch in tqdm(dataloader, desc="Extracting Inception features"):
-            if isinstance(batch, (list, tuple)):
+            if isinstance(batch, list | tuple):
                 images = batch[0]
             elif isinstance(batch, dict):
                 images = batch.get("image", batch.get("pixel_values"))
@@ -176,9 +174,9 @@ class FIDEvaluator:
         self.max_fake_samples = max_fake_samples
 
         self.inception = InceptionV3Features(device)
-        self._real_stats: Optional[Tuple[np.ndarray, np.ndarray]] = None
+        self._real_stats: tuple[np.ndarray, np.ndarray] | None = None
 
-    def _load_or_compute_real_stats(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_or_compute_real_stats(self) -> tuple[np.ndarray, np.ndarray]:
         stats_file = self.cache_dir / "real_stats.npz"
         if stats_file.exists():
             data = np.load(stats_file)
@@ -198,7 +196,7 @@ class FIDEvaluator:
         self,
         generator_fn,     # callable: (batch_size) → torch.Tensor (B, 3, H, W)
         batch_size: int = 32,
-        num_samples: Optional[int] = None,
+        num_samples: int | None = None,
     ) -> float:
         """
         Args:

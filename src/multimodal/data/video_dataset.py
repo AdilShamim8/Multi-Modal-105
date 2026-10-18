@@ -1,16 +1,15 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Any, ClassVar
-import json
-import random
 import logging
-import decord
-from decord import VideoReader, cpu, gpu
+import random
+from pathlib import Path
+from typing import ClassVar
+
 import cv2
-from PIL import Image
+import decord
+import numpy as np
+import pandas as pd
+import torch
+from decord import VideoReader, cpu
+from torch.utils.data import DataLoader, Dataset
 
 logger = logging.getLogger(__name__)
 decord.bridge.set_bridge("torch")
@@ -42,7 +41,7 @@ class VideoLoader:
         self.random_flip = random_flip
         self.sampling = sampling
 
-    def load_video(self, video_path: str) -> Optional[torch.Tensor]:
+    def load_video(self, video_path: str) -> torch.Tensor | None:
         """
         Load video and return (T, H, W, C) tensor in [0, 255].
         Returns None if loading fails.
@@ -70,7 +69,7 @@ class VideoLoader:
         self,
         total_frames: int,
         video_fps: float,
-    ) -> Optional[List[int]]:
+    ) -> list[int] | None:
         """Sample frame indices based on sampling strategy."""
 
         if self.sampling == "fps":
@@ -98,7 +97,7 @@ class VideoLoader:
 
     def preprocess_frames(
         self, frames: torch.Tensor
-    ) -> Optional[torch.Tensor]:
+    ) -> torch.Tensor | None:
         """
         Preprocess frames: resize, crop, normalize.
         Args:
@@ -144,7 +143,7 @@ class VideoLoader:
         video = video / 127.5 - 1.0
         return video
 
-    def __call__(self, video_path: str) -> Optional[torch.Tensor]:
+    def __call__(self, video_path: str) -> torch.Tensor | None:
         frames = self.load_video(video_path)
         if frames is None:
             return None
@@ -173,7 +172,7 @@ class VideoFilter:
         max_duration: float = 60.0,
         min_motion_score: float = 0.5,
         max_motion_score: float = 10.0,
-        min_aesthetic_score: Optional[float] = None,
+        min_aesthetic_score: float | None = None,
     ):
         self.min_resolution = min_resolution
         self.min_duration = min_duration
@@ -262,7 +261,7 @@ class VideoStandardizer:
     into a unified format.
     """
 
-    UNIFIED_SCHEMA: ClassVar[Dict[str, type]] = {
+    UNIFIED_SCHEMA: ClassVar[dict[str, type]] = {
         "video_id": str,
         "video_path": str,
         "caption": str,
@@ -327,7 +326,7 @@ class VideoTextDataset(Dataset):
         max_token_length: int = 77,
         center_crop: bool = True,
         random_flip: bool = True,
-        filter_config: Optional[Dict] = None,
+        filter_config: dict | None = None,
         sampling: str = "uniform",
     ):
         self.num_frames = num_frames
@@ -362,7 +361,7 @@ class VideoTextDataset(Dataset):
     def __len__(self) -> int:
         return len(self.meta)
 
-    def __getitem__(self, idx: int) -> Optional[Dict[str, torch.Tensor]]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor] | None:
         row = self.meta.iloc[idx]
         video_path = row["video_path"]
 
@@ -484,7 +483,7 @@ class VideoLatentDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         p = self.samples[idx]
         latent = torch.from_numpy(
             np.load(p / "latent.npy").astype(np.float32)

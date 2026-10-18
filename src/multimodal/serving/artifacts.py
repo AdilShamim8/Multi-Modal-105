@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import time
 from pathlib import Path
 from typing import Protocol
 
@@ -112,7 +111,7 @@ class S3ArtifactStore:
             return False
 
 
-def build_artifact_store(config) -> ArtifactStore:  # noqa: ANN001 - ServingConfig
+def build_artifact_store(config) -> ArtifactStore:
     """Factory keyed on config.artifact_store."""
     if config.artifact_store == "s3":
         return S3ArtifactStore(

@@ -11,9 +11,6 @@ Consumes: `multimodal.config.gan_config.GANConfig`,
 
 from __future__ import annotations
 
-import os
-from typing import Any, Optional
-
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -34,7 +31,7 @@ class GANTrainer:
         gan: StyleGAN2,
         config: GANConfig,
         train_loader: DataLoader,
-        device: Optional[str] = None,
+        device: str | None = None,
         checkpoint_dir: str = "./checkpoints/gan",
     ):
         self.config = config
@@ -127,7 +124,7 @@ class GANTrainer:
         while self.step < cfg.num_train_steps:
             epoch += 1
             for batch in self.train_loader:
-                images = batch[0] if isinstance(batch, (list, tuple)) else batch
+                images = batch[0] if isinstance(batch, list | tuple) else batch
                 stats = self.train_step(images)
                 if self.step % cfg.log_every_n_steps == 0 and is_main_process():
                     self.metrics.log(stats, step=self.step)

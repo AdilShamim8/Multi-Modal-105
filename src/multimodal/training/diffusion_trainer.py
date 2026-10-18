@@ -1,16 +1,13 @@
+
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler, autocast
 from accelerate import Accelerator
-from typing import Optional, Dict, Any
-import os
+from torch.utils.data import DataLoader
 
-from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
-from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
-from multimodal.models.diffusion.dit import EMAModel
 from multimodal.config.diffusion_config import DiffusionConfig
-from multimodal.utils.logging_utils import MetricLogger
+from multimodal.models.diffusion.dit import EMAModel
+from multimodal.models.diffusion.forward_backward import DiffusionForwardProcess
+from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 from multimodal.utils.checkpoint import CheckpointManager
 from multimodal.utils.distributed import is_main_process
 
@@ -32,10 +29,10 @@ class DiffusionTrainer:
         config: DiffusionConfig,
         model: nn.Module,
         train_loader: DataLoader,
-        val_loader: Optional[DataLoader] = None,
-        text_encoder: Optional[nn.Module] = None,
+        val_loader: DataLoader | None = None,
+        text_encoder: nn.Module | None = None,
         tokenizer=None,
-        vae: Optional[nn.Module] = None,
+        vae: nn.Module | None = None,
     ):
         self.config = config
         self.train_loader = train_loader
@@ -127,7 +124,7 @@ class DiffusionTrainer:
         with torch.no_grad():
             return self.vae.encode_to_latent(images)
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         self.model.train()
 
         with self.accelerator.accumulate(self.model):

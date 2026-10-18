@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import time
 
-from typing import Union
-
 from fastapi import APIRouter, Query, Request, Response, status
 from fastapi.responses import JSONResponse
 
@@ -36,7 +34,7 @@ router = APIRouter(prefix="/v1", tags=["generation"])
 @router.post(
     "/generations",
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=Union[JobEnvelope, SyncGenerationOut],
+    response_model=JobEnvelope | SyncGenerationOut,
     summary="Submit a generation job",
     responses={200: {"model": SyncGenerationOut, "description": "Synchronous result"}},
 )
@@ -94,7 +92,7 @@ async def submit_generation(
     )
 
 
-def _sync_generate(app, job: GenerationJob):  # noqa: ANN001, ANN202
+def _sync_generate(app, job: GenerationJob):
     """Execute inline under the sync timeout; fall back to the queue on overrun."""
     import threading
 
@@ -119,7 +117,7 @@ def _sync_generate(app, job: GenerationJob):  # noqa: ANN001, ANN202
             job.error = exc.to_dict()
             job.transition(JobStatus.FAILED)
             result["error"] = exc
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             job.error = {"code": "internal_error", "message": str(exc)}
             job.transition(JobStatus.FAILED)
             result["error"] = exc

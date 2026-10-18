@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def _build_parser() -> argparse.ArgumentParser:

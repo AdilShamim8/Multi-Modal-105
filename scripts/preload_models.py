@@ -17,8 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from multimodal.logging import configure_logging, get_logger  # noqa: E402
-from multimodal.serving.config import ServingConfig  # noqa: E402
+from multimodal.logging import configure_logging, get_logger
+from multimodal.serving.config import ServingConfig
 
 log = get_logger(__name__)
 
@@ -71,7 +71,7 @@ def preload(config: ServingConfig, dry_run: bool = False, force: bool = False) -
                 "bytes": manifest.get("bytes"),
             })
             loaded += 1
-        except Exception as exc:  # noqa: BLE001 — report every bundle failure
+        except Exception as exc:
             log.error("bundle verification failed", extra={
                 "key": key, "error": str(exc),
             })

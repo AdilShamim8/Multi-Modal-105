@@ -10,14 +10,13 @@ losses, lazy R1 penalty, the truncation trick, generator EMA) lives here.
 from __future__ import annotations
 
 import copy
-import math
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .generator import StyleGAN2Generator
 from .discriminator import StyleGAN2Discriminator
+from .generator import StyleGAN2Generator
 
 
 class StyleGAN2(nn.Module):
@@ -123,7 +122,6 @@ class StyleGAN2(nn.Module):
             # Truncation trick: pull w toward the running mean.
             w = self.generator.mapping(z)
             w = self.w_avg + truncation_psi * (w - self.w_avg)
-            ws = w.unsqueeze(1).expand(-1, self.generator.num_ws, -1)
             # Reuse the generator forward but override ws via a small shim.
             saved = self.generator.mapping
             self.generator.mapping = lambda x: w  # type: ignore[assignment]

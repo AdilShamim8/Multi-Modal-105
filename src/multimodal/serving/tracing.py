@@ -16,8 +16,6 @@ production turns it on with a sampled exporter.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from ..logging import get_logger
 from .config import ServingConfig
 
@@ -82,13 +80,13 @@ def get_tracer(name: str = "multimodal"):
 class _NullTracer:
     """Duck-types the OTel tracer interface for disabled deployments."""
 
-    def start_as_current_span(self, *args, **kwargs):  # noqa: ANN002, ANN003
+    def start_as_current_span(self, *args, **kwargs):
         import contextlib
 
         return contextlib.nullcontext()
 
 
-def record_job_span(job):  # noqa: ANN001 - GenerationJob (avoids import cycle)
+def record_job_span(job):
     """Attach job metadata to the current span, if tracing is active."""
     if not _enabled:
         return
@@ -101,5 +99,5 @@ def record_job_span(job):  # noqa: ANN001 - GenerationJob (avoids import cycle)
             span.set_attribute("mm.modality", job.modality)
             span.set_attribute("mm.steps", job.num_steps)
             span.set_attribute("mm.correlation_id", job.correlation_id)
-    except Exception:  # noqa: BLE001 — telemetry must never break the job
+    except Exception:
         pass

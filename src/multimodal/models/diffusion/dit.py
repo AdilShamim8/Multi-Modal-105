@@ -1,15 +1,13 @@
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-import math
-import numpy as np
-from typing import Optional, Tuple
 
 # TimestepEmbedding is shared with the U-Net implementation (same package;
 # no cycle: unet.py does not import dit.py).
 from .unet import TimestepEmbedding
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Patch embedding
@@ -88,7 +86,7 @@ class AdaLNZero(nn.Module):
 
     def forward(
         self, x: torch.Tensor, c: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor,
                torch.Tensor, torch.Tensor, torch.Tensor]:
         mods = self.modulation(c)[:, None].chunk(6, dim=-1)
         shift1, scale1, gate1, shift2, scale2, gate2 = mods
@@ -130,7 +128,7 @@ class DiTBlock(nn.Module):
         num_heads: int,
         mlp_ratio: float = 4.0,
         cond_dim: int = 1152,
-        context_dim: Optional[int] = None,     # if None, no cross-attn
+        context_dim: int | None = None,     # if None, no cross-attn
         dropout: float = 0.0,
     ):
         super().__init__()
@@ -197,7 +195,7 @@ class DiTBlock(nn.Module):
         self,
         x: torch.Tensor,
         c: torch.Tensor,
-        context: Optional[torch.Tensor] = None,
+        context: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # adaLN conditioning
         x_norm, gate1, shift2, scale2, gate2 = self.adaLN(x, c)
@@ -267,7 +265,7 @@ class DiT(nn.Module):
         num_heads: int = 16,
         mlp_ratio: float = 4.0,
         num_classes: int = 1000,          # for class-conditional
-        context_dim: Optional[int] = 768, # for text-conditional; None = class-only
+        context_dim: int | None = 768, # for text-conditional; None = class-only
         class_dropout_prob: float = 0.1,
         learn_sigma: bool = True,
         dropout: float = 0.0,
@@ -354,10 +352,10 @@ class DiT(nn.Module):
     def _get_conditioning(
         self,
         t: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
-        text_embeds: Optional[torch.Tensor] = None,
+        y: torch.Tensor | None = None,
+        text_embeds: torch.Tensor | None = None,
         force_drop_ids: bool = False,
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Build conditioning vector c from timestep + class label."""
         t_emb = self.t_embedder(t)     # (B, D)
 
@@ -392,10 +390,10 @@ class DiT(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
-        text_embeds: Optional[torch.Tensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        y: torch.Tensor | None = None,
+        text_embeds: torch.Tensor | None = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
         force_drop_ids: bool = False,
     ) -> torch.Tensor:
         """
@@ -433,8 +431,8 @@ class DiT(nn.Module):
         self,
         x: torch.Tensor,
         t: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
-        text_embeds: Optional[torch.Tensor] = None,
+        y: torch.Tensor | None = None,
+        text_embeds: torch.Tensor | None = None,
         cfg_scale: float = 7.5,
     ) -> torch.Tensor:
         """

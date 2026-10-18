@@ -25,11 +25,11 @@ _SLOW_REQUEST_S = 2.0
 class RequestLifecycleMiddleware(BaseHTTPMiddleware):
     """Assign correlation ids, time requests, log completion, count metrics."""
 
-    def __init__(self, app, *, metrics_enabled: bool = True) -> None:  # noqa: ANN001
+    def __init__(self, app, *, metrics_enabled: bool = True) -> None:
         super().__init__(app)
         self.metrics_enabled = metrics_enabled
 
-    async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
+    async def dispatch(self, request: Request, call_next) -> Response:
         correlation_id = request.headers.get("X-Request-ID") or new_correlation_id()
         request.state.correlation_id = correlation_id
         started = time.perf_counter()

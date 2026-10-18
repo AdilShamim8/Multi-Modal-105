@@ -15,9 +15,8 @@ job would pad both to the worst case and waste GPU-seconds.
 from __future__ import annotations
 
 import time
-from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
 
 from .jobs import GenerationJob
 
@@ -51,7 +50,7 @@ class BatchScheduler:
         self._open: dict[tuple, Batch] = {}
         self._stats = {"batches": 0, "jobs": 0, "solo_flushes": 0}
 
-    def add(self, job: GenerationJob) -> Optional[Batch]:
+    def add(self, job: GenerationJob) -> Batch | None:
         """Add a job; returns a Batch when it should execute NOW."""
         key = signature(job)
         batch = self._open.get(key)

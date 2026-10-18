@@ -1,7 +1,8 @@
-import torch
-import torch.nn.functional as F
+from collections.abc import Callable
+
 import numpy as np
-from typing import Optional, Callable, List
+import torch
+
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 
@@ -67,12 +68,12 @@ class DPMSolver:
         model: torch.nn.Module,
         shape: tuple,
         device: torch.device,
-        conditioning: Optional[dict] = None,
+        conditioning: dict | None = None,
         num_inference_steps: int = 20,
         guidance_scale: float = 7.5,
         clip_denoised: bool = True,
         show_progress: bool = True,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> torch.Tensor:
         """
         DPM-Solver++ multistep sampling.
@@ -84,8 +85,8 @@ class DPMSolver:
         timesteps = self._build_timesteps(num_inference_steps)
 
         x = torch.randn(*shape, device=device)
-        model_prev_list: List[torch.Tensor] = []
-        t_prev_list: List[int] = []
+        model_prev_list: list[torch.Tensor] = []
+        t_prev_list: list[int] = []
 
         from tqdm import tqdm
         pbar = tqdm(range(len(timesteps)), desc=f"DPM-Solver++ ({num_inference_steps} steps)") \
@@ -131,7 +132,7 @@ class DPMSolver:
 
         return x
 
-    def _build_timesteps(self, num_steps: int) -> List[int]:
+    def _build_timesteps(self, num_steps: int) -> list[int]:
         """Log-SNR spacing for better quality."""
         T = self.scheduler.num_train_timesteps
         lambda_T = self._lambda(T - 1)
@@ -169,8 +170,8 @@ class DPMSolver:
     def _dpm_solver_second_order(
         self,
         x: torch.Tensor,
-        model_prev_list: List[torch.Tensor],
-        t_prev_list: List[int],
+        model_prev_list: list[torch.Tensor],
+        t_prev_list: list[int],
         t: int,
         t_prev: int,
         device: torch.device,
@@ -191,7 +192,6 @@ class DPMSolver:
 
         alpha_prev = self._alpha(torch.tensor(t_prev)).to(device)
         sigma_prev = self._sigma(torch.tensor(t_prev)).to(device)
-        alpha_t_cur = self._alpha(torch.tensor(t)).to(device)
         sigma_t_cur = self._sigma(torch.tensor(t)).to(device)
 
         D0 = x0_cur
@@ -208,8 +208,8 @@ class DPMSolver:
     def _dpm_solver_third_order(
         self,
         x: torch.Tensor,
-        model_prev_list: List[torch.Tensor],
-        t_prev_list: List[int],
+        model_prev_list: list[torch.Tensor],
+        t_prev_list: list[int],
         t: int,
         t_prev: int,
         device: torch.device,

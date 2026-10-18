@@ -7,7 +7,6 @@ import torch
 
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
-
 SCHEDULES = ["linear", "scaled_linear", "cosine"]
 
 

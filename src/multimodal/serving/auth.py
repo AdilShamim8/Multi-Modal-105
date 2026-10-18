@@ -37,12 +37,12 @@ def key_fingerprint(api_key: str) -> str:
 class APIKeyMiddleware(BaseHTTPMiddleware):
     """Rejects requests without a valid `X-API-Key` header."""
 
-    def __init__(self, app, api_keys: list[str], enabled: bool = True) -> None:  # noqa: ANN001
+    def __init__(self, app, api_keys: list[str], enabled: bool = True) -> None:
         super().__init__(app)
         self.enabled = enabled and bool(api_keys)
         self._keys = [k.encode() for k in api_keys]
 
-    async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
+    async def dispatch(self, request: Request, call_next) -> Response:
         if not self.enabled or _is_public(request.url.path):
             return await call_next(request)
 

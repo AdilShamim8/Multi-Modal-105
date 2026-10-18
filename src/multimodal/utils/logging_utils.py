@@ -1,12 +1,10 @@
 import logging
-import sys
 import os
-from typing import Optional, Dict, Any
+from typing import Any
+
+import wandb
 from rich.console import Console
 from rich.logging import RichHandler
-import wandb
-import torch
-
 
 console = Console()
 
@@ -14,7 +12,7 @@ console = Console()
 def setup_logger(
     name: str,
     level: int = logging.INFO,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
 ) -> logging.Logger:
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -48,7 +46,7 @@ class MetricLogger:
         self,
         project: str,
         name: str,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         use_wandb: bool = True,
         output_dir: str = "./outputs",
     ):
@@ -76,13 +74,13 @@ class MetricLogger:
         except ImportError:
             self.tb_writer = None
 
-    def log(self, metrics: Dict[str, Any], step: Optional[int] = None):
+    def log(self, metrics: dict[str, Any], step: int | None = None):
         step = step or self.step
         if self.use_wandb:
             wandb.log(metrics, step=step)
         if self.tb_writer:
             for k, v in metrics.items():
-                if isinstance(v, (int, float)):
+                if isinstance(v, int | float):
                     self.tb_writer.add_scalar(k, v, step)
         # Console log
         msg = " | ".join(
@@ -91,12 +89,12 @@ class MetricLogger:
         )
         self.logger.info(f"[Step {step}] {msg}")
 
-    def log_image(self, key: str, images, step: Optional[int] = None):
+    def log_image(self, key: str, images, step: int | None = None):
         step = step or self.step
         if self.use_wandb:
             wandb.log({key: [wandb.Image(img) for img in images]}, step=step)
 
-    def log_video(self, key: str, video_path: str, step: Optional[int] = None):
+    def log_video(self, key: str, video_path: str, step: int | None = None):
         step = step or self.step
         if self.use_wandb:
             wandb.log({key: wandb.Video(video_path)}, step=step)

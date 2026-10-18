@@ -1,7 +1,8 @@
-import torch
-import torch.nn.functional as F
+from collections.abc import Callable
+
 import numpy as np
-from typing import Optional, Callable, Tuple
+import torch
+
 from multimodal.models.diffusion.noise_scheduler import NoiseScheduler
 
 
@@ -29,14 +30,14 @@ class DDIMSampler:
         model: torch.nn.Module,
         shape: tuple,
         device: torch.device,
-        conditioning: Optional[dict] = None,
+        conditioning: dict | None = None,
         num_inference_steps: int = 50,
         guidance_scale: float = 7.5,
         eta: float = 0.0,              # 0 = deterministic, 1 = DDPM-like
         clip_denoised: bool = True,
         show_progress: bool = True,
-        callback: Optional[Callable] = None,
-        latents: Optional[torch.Tensor] = None,
+        callback: Callable | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """
         DDIM reverse process.
@@ -129,7 +130,7 @@ class DDIMSampler:
         self,
         x0: torch.Tensor,
         t: int,
-        noise: Optional[torch.Tensor] = None,
+        noise: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """DDIM inversion: encode real image into noisy latent at time t."""
         if noise is None:

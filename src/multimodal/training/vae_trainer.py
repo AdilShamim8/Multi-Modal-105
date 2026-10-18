@@ -1,17 +1,16 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-from torch.cuda.amp import GradScaler, autocast
-from typing import Optional, Dict, Any
-import lpips
 
-from multimodal.models.vae.vae import AutoencoderKL
-from multimodal.models.gans.discriminator import StyleGAN2Discriminator
+import lpips
+import torch
+import torch.nn.functional as F
+from torch.cuda.amp import GradScaler, autocast
+from torch.utils.data import DataLoader
+
 from multimodal.config.vae_config import VAEConfig
-from multimodal.utils.logging_utils import MetricLogger
+from multimodal.models.gans.discriminator import StyleGAN2Discriminator
+from multimodal.models.vae.vae import AutoencoderKL
 from multimodal.utils.checkpoint import CheckpointManager
-from multimodal.utils.distributed import is_main_process, all_reduce_mean
+from multimodal.utils.distributed import is_main_process
+from multimodal.utils.logging_utils import MetricLogger
 
 
 class VAETrainer:
@@ -25,7 +24,7 @@ class VAETrainer:
     """
 
     def __init__(self, config: VAEConfig, train_loader: DataLoader,
-                 val_loader: Optional[DataLoader] = None):
+                 val_loader: DataLoader | None = None):
         self.config = config
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -87,7 +86,7 @@ class VAETrainer:
         recon: torch.Tensor,
         posterior,
         step: int,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         # Reconstruction loss (L1)
         recon_loss = F.l1_loss(recon, x)
 
@@ -123,7 +122,7 @@ class VAETrainer:
         self,
         x: torch.Tensor,
         recon: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> dict[str, torch.Tensor]:
         # Hinge loss
         real_pred = self.discriminator(x.detach())
         fake_pred = self.discriminator(recon.detach())
@@ -143,7 +142,7 @@ class VAETrainer:
             "r1": r1,
         }
 
-    def train_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+    def train_step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         x = batch["image"].to(self.device)
         dtype = torch.bfloat16 if self.config.mixed_precision == "bf16" else torch.float16
 

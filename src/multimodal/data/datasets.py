@@ -1,15 +1,12 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-import pandas as pd
-import numpy as np
-from PIL import Image
-import os
-import json
-import webdataset as wds
-from pathlib import Path
-from typing import Optional, Dict, List, Callable, Tuple, Any
-import io
 import logging
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+import torch
+import webdataset as wds
+from PIL import Image
+from torch.utils.data import Dataset
 
 from .transforms import ImageTransform, ResolutionBucketTransform
 
@@ -37,7 +34,7 @@ class LAIONDataset(Dataset):
         center_crop: bool = True,
         random_flip: bool = True,
         filter_min_size: int = 256,
-        filter_aesthetic_score: Optional[float] = None,
+        filter_aesthetic_score: float | None = None,
         use_bucket_sampling: bool = False,
     ):
         self.data_root = Path(data_root)
@@ -68,7 +65,7 @@ class LAIONDataset(Dataset):
     def _filter_metadata(
         self,
         min_size: int,
-        aesthetic_score: Optional[float],
+        aesthetic_score: float | None,
     ) -> pd.DataFrame:
         df = self.meta.copy()
 
@@ -92,7 +89,7 @@ class LAIONDataset(Dataset):
     def __len__(self) -> int:
         return len(self.meta)
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         row = self.meta.iloc[idx]
 
         # Load image
@@ -145,7 +142,7 @@ class WebDatasetT2I:
 
     def __init__(
         self,
-        urls: List[str],
+        urls: list[str],
         tokenizer,
         resolution: int = 512,
         max_token_length: int = 77,
@@ -189,7 +186,7 @@ class WebDatasetT2I:
             persistent_workers=True,
         ).unbatched().shuffle(1000).batched(batch_size)
 
-    def _preprocess(self, sample: Dict) -> Optional[Dict]:
+    def _preprocess(self, sample: dict) -> dict | None:
         try:
             image = sample["image"]
             if not isinstance(image, Image.Image):
@@ -251,7 +248,7 @@ class ImageNetDataset(Dataset):
         self.num_classes = len(classes)
 
         # Build sample list
-        self.samples: List[Tuple[Path, int]] = []
+        self.samples: list[tuple[Path, int]] = []
         for cls_name in classes:
             cls_dir = self.root / cls_name
             cls_idx = self.class_to_idx[cls_name]
@@ -267,7 +264,7 @@ class ImageNetDataset(Dataset):
     def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         img_path, label = self.samples[idx]
         try:
             image = Image.open(img_path).convert("RGB")

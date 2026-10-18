@@ -20,7 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 
-def build_fake_batch_pipeline(batch: int, steps: int):  # noqa: ANN201
+def build_fake_batch_pipeline(batch: int, steps: int):
     """Stand-in workload with representative compute cost.
 
     A real benchmark swaps in the loaded T2IPipeline; the timing loop,
@@ -29,7 +29,6 @@ def build_fake_batch_pipeline(batch: int, steps: int):  # noqa: ANN201
     """
     import torch
 
-    conv = torch.nn.Conv2d(4, 256, 3, padding=1).eval()
     weights = [torch.randn(8, 4, 64, 64) for _ in range(batch)]
 
     def run_once() -> None:

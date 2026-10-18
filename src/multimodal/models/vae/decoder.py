@@ -1,7 +1,8 @@
+
 import torch
 import torch.nn as nn
-from typing import Tuple
-from .encoder import ResidualBlock, AttentionBlock
+
+from .encoder import AttentionBlock, ResidualBlock
 
 
 class UpsampleBlock(nn.Module):
@@ -25,9 +26,9 @@ class Decoder(nn.Module):
         out_channels: int = 3,
         latent_channels: int = 4,
         base_channels: int = 128,
-        channel_multipliers: Tuple[int, ...] = (1, 2, 4, 8),
+        channel_multipliers: tuple[int, ...] = (1, 2, 4, 8),
         num_res_blocks: int = 2,
-        attention_resolutions: Tuple[int, ...] = (16,),
+        attention_resolutions: tuple[int, ...] = (16,),
         dropout: float = 0.0,
     ):
         super().__init__()

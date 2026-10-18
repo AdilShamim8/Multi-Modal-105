@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):  # noqa: ANN001 - PEP 562
+def __getattr__(name: str):
     if name == "create_app":
         from .app import create_app
 

@@ -1,9 +1,9 @@
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Tuple, Optional, Dict
-from .encoder import Encoder
+
 from .decoder import Decoder
+from .encoder import Encoder
 
 
 class DiagonalGaussian(nn.Module):
@@ -39,8 +39,7 @@ class AutoencoderKL(nn.Module):
     def __init__(self, config=None, **kwargs):
         super().__init__()
 
-        # Pull params from config or kwargs
-        cfg = config or {}
+        # Pull params from kwargs (config accepted for API compatibility)
         in_channels      = kwargs.get("in_channels", 3)
         latent_channels  = kwargs.get("latent_channels", 4)
         base_channels    = kwargs.get("base_channels", 128)
@@ -89,7 +88,7 @@ class AutoencoderKL(nn.Module):
         self,
         x: torch.Tensor,
         sample_posterior: bool = True,
-    ) -> Tuple[torch.Tensor, DiagonalGaussian]:
+    ) -> tuple[torch.Tensor, DiagonalGaussian]:
         posterior = self.encode(x)
         z = posterior.sample() if sample_posterior else posterior.mode()
         recon = self.decode(z)

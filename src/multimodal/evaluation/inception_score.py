@@ -1,10 +1,10 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-from typing import Callable, Optional, Tuple
-from tqdm import tqdm
 import logging
+from collections.abc import Callable
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class InceptionScoreEvaluator:
         self.num_splits = num_splits
 
         # Load InceptionV3 classifier (with logits)
-        from torchvision.models import inception_v3, Inception_V3_Weights
+        from torchvision.models import Inception_V3_Weights, inception_v3
         self.inception = inception_v3(weights=Inception_V3_Weights.IMAGENET1K_V1)
         self.inception = self.inception.to(device)
         self.inception.eval()
@@ -57,7 +57,7 @@ class InceptionScoreEvaluator:
     def compute_inception_score(
         self,
         preds: np.ndarray,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Compute IS from precomputed predictions using split method.
         Returns:
@@ -89,7 +89,7 @@ class InceptionScoreEvaluator:
         generator_fn: Callable,
         num_samples: int = 50000,
         batch_size: int = 32,
-    ) -> Tuple[float, float]:
+    ) -> tuple[float, float]:
         """
         Full IS evaluation pipeline.
         Args:

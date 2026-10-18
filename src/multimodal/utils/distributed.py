@@ -1,7 +1,7 @@
 import os
+
 import torch
 import torch.distributed as dist
-from typing import Optional
 
 
 def setup_distributed() -> dict:

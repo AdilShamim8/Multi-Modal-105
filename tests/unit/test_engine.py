@@ -5,15 +5,13 @@ from __future__ import annotations
 import io
 
 import pytest
-import torch
+from tests.fakes import FakeRedis  # noqa: F401 - import sanity for CI
 
 from multimodal.exceptions import OutOfMemoryError
 from multimodal.serving.config import ServingConfig
 from multimodal.serving.engine import InferenceEngine
 from multimodal.serving.jobs import GenerationJob
 from multimodal.serving.schemas import new_job_id
-
-from tests.fakes import FakeRedis  # noqa: F401 - import sanity for CI
 
 
 class OomPipeline:
@@ -29,7 +27,6 @@ class OomPipeline:
         if params["num_outputs"] > self.fail_until_outputs or \
                 params["num_steps"] > self.fail_until_steps:
             raise RuntimeError("CUDA out of memory. Tried to allocate 2.00 GiB")
-        img = torch.nn.Parameter()  # placeholder replaced below
         from PIL import Image
 
         buf = io.BytesIO()
@@ -38,7 +35,7 @@ class OomPipeline:
 
 
 def make_job(**kwargs):
-    defaults = dict(job_id=new_job_id(), prompt="p", num_outputs=4, num_steps=30)
+    defaults = {"job_id": new_job_id(), "prompt": "p", "num_outputs": 4, "num_steps": 30}
     defaults.update(kwargs)
     return GenerationJob(**defaults)
 

@@ -17,7 +17,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from ..exceptions import GenerationError
 
@@ -59,20 +59,20 @@ class GenerationJob:
     guidance_scale: float = 7.5
     sampler: str = "dpm++"
     num_outputs: int = 1
-    seed: Optional[int] = None
+    seed: int | None = None
     api_key_hint: str = "-"            # key fingerprint (never the raw key)
     status: JobStatus = JobStatus.QUEUED
     attempts: int = 0
     created_at: float = field(default_factory=time.time)
-    started_at: Optional[float] = None
-    finished_at: Optional[float] = None
+    started_at: float | None = None
+    finished_at: float | None = None
     artifact_keys: list[str] = field(default_factory=list)
-    error: Optional[dict[str, Any]] = None
+    error: dict[str, Any] | None = None
     correlation_id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
     # ── State machine ─────────────────────────────────────────────────────
     def transition(self, new_status: JobStatus) -> None:
-        current: Optional[JobStatus] = self.status
+        current: JobStatus | None = self.status
         if (current, new_status) not in _VALID:
             raise GenerationError(
                 "invalid job state transition",
@@ -89,11 +89,11 @@ class GenerationJob:
     def to_redis(self) -> dict[str, str]:
         payload = asdict(self)
         payload["status"] = self.status.value
-        return {k: json.dumps(v) if isinstance(v, (dict, list)) else str(v)
+        return {k: json.dumps(v) if isinstance(v, dict | list) else str(v)
                 for k, v in payload.items() if v is not None}
 
     @classmethod
-    def from_redis(cls, data: dict[str, str]) -> "GenerationJob":
+    def from_redis(cls, data: dict[str, str]) -> GenerationJob:
         kwargs: dict[str, Any] = {}
         for key, value in data.items():
             if key in ("artifact_keys", "error"):
@@ -116,12 +116,12 @@ class GenerationJob:
                 kwargs[key] = value
         return cls(**kwargs)
 
-    def queue_wait_s(self) -> Optional[float]:
+    def queue_wait_s(self) -> float | None:
         if self.started_at is None:
             return None
         return round(self.started_at - self.created_at, 3)
 
-    def duration_s(self) -> Optional[float]:
+    def duration_s(self) -> float | None:
         if self.started_at is None or self.finished_at is None:
             return None
         return round(self.finished_at - self.started_at, 3)
