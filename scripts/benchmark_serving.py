@@ -56,7 +56,7 @@ def main() -> int:
         run_once()
 
     timings: list[float] = []
-    for i in range(args.runs):
+    for _ in range(args.runs):
         started = time.perf_counter()
         run_once()
         timings.append(time.perf_counter() - started)

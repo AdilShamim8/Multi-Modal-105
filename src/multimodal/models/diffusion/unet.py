@@ -329,7 +329,7 @@ class UNet2DConditionModel(nn.Module):
             use_attn = res in attention_resolutions
 
             block = nn.ModuleList()
-            for j in range(num_res_blocks):
+            for _ in range(num_res_blocks):
                 block.append(ResBlock(in_ch, out_ch, time_emb_dim, dropout))
                 in_ch = out_ch
                 skip_channels.append(in_ch)
@@ -361,7 +361,7 @@ class UNet2DConditionModel(nn.Module):
             use_attn = res in attention_resolutions
 
             block = nn.ModuleList()
-            for j in range(num_res_blocks + 1):
+            for _ in range(num_res_blocks + 1):
                 skip_ch = skip_channels.pop()
                 block.append(ResBlock(in_ch + skip_ch, out_ch, time_emb_dim, dropout))
                 in_ch = out_ch

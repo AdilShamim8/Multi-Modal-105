@@ -104,7 +104,7 @@ class TestDrain:
             queue, engine, LocalArtifactStore(str(tmp_path / "a")), config,
             max_wait_s=0.0,   # tests flush immediately — no latency budget
         )
-        for i in range(3):
+        for _ in range(3):
             queue.enqueue(job(num_steps=30))   # same signature → one batch
 
         for _ in range(3):

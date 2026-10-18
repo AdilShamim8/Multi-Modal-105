@@ -11,9 +11,11 @@ Operational contract:
 
 from __future__ import annotations
 
+import logging
 import signal
 import threading
 import time
+import contextlib
 from typing import Optional
 
 from ..exceptions import GenerationError, MultimodalError, OutOfMemoryError
@@ -75,10 +77,9 @@ class GenerationWorker:
 
     def _install_signal_handlers(self) -> None:
         for sig in (signal.SIGTERM, signal.SIGINT):
-            try:
+            # not on main thread (tests): signal.signal raises ValueError
+            with contextlib.suppress(ValueError):
                 signal.signal(sig, lambda *_: self.stop())
-            except ValueError:  # not on main thread (tests)
-                pass
 
     # ── Main loop ──────────────────────────────────────────────────────────
     def _poll_once(self) -> None:

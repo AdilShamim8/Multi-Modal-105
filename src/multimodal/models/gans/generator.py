@@ -191,7 +191,7 @@ class StyleGAN2Generator(nn.Module):
         self.to_rgbs = nn.ModuleList()
 
         in_ch = nf(1)
-        for i, res in enumerate(self.resolutions):
+        for i, _res in enumerate(self.resolutions):
             out_ch = nf(i + 1)
             upsample = i > 0
             self.style_blocks.append(StyleBlock(in_ch, out_ch, w_dim, upsample=upsample))
@@ -214,7 +214,7 @@ class StyleGAN2Generator(nn.Module):
         img = None
 
         block_idx = 0
-        for i, to_rgb in enumerate(self.to_rgbs):
+        for _, to_rgb in enumerate(self.to_rgbs):
             x = self.style_blocks[block_idx](x, ws[:, block_idx])
             block_idx += 1
             x = self.style_blocks[block_idx](x, ws[:, block_idx])

@@ -148,7 +148,7 @@ class InferenceEngine:
     ) -> list[bytes]:
         last_error: Exception | None = None
         degraded = dict(params)
-        for attempt in range(2):
+        for _ in range(2):
             try:
                 return self._run(pipeline, modality, degraded)
             except MemoryError as exc:  # torch raises RuntimeError for OOM; both handled

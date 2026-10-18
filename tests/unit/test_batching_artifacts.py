@@ -42,7 +42,7 @@ class TestBatchScheduler:
     def test_flushes_when_full(self):
         scheduler = BatchScheduler(max_batch=3, max_wait_s=60)
         batch = None
-        for i in range(3):
+        for _ in range(3):
             batch = scheduler.add(job()) or batch
         assert batch is not None and len(batch.jobs) == 3
 

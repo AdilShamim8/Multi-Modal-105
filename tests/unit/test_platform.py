@@ -28,7 +28,8 @@ class TestMetrics:
     def test_metric_names_match_alert_contract(self):
         """alerts.yml references these exact names — renaming is a breaking
         change (ADR-011). Freeze them here."""
-        source = open(metrics.__file__).read()
+        with open(metrics.__file__) as fh:
+            source = fh.read()
         for name in (
             "mm_api_requests_total",
             "mm_api_request_latency_seconds",

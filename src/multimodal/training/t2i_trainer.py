@@ -222,7 +222,7 @@ class T2ITrainer:
 
         # Text → embeddings with random dropout (CFG training)
         input_ids = batch["input_ids"].to(self.device)
-        attention_mask = batch.get("attention_mask", None)
+        attention_mask = batch.get("attention_mask")
         if attention_mask is not None:
             attention_mask = attention_mask.to(self.device)
 
@@ -381,7 +381,7 @@ class T2ITrainer:
 
         if is_main_process():
             self.accelerator.log(
-                {"samples": [img for img in images]},
+                {"samples": list(images)},
                 step=step,
             )
 
