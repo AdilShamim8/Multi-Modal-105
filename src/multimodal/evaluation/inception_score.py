@@ -107,13 +107,15 @@ class InceptionScoreEvaluator:
                 images = generator_fn(cur_batch)
                 if isinstance(images, tuple):
                     images = images[0]
-                preds = self.get_predictions(images.to(self.device))
-                all_preds.append(preds)
+                batch_preds = self.get_predictions(images.to(self.device))
+                all_preds.append(batch_preds)
                 total += cur_batch
                 pbar.update(cur_batch)
 
-        all_preds = np.concatenate(all_preds, axis=0)[:num_samples]
-        is_mean, is_std = self.compute_inception_score(all_preds)
+        # Fresh variable: mypy fixes a variable's type at first binding, so
+        # reusing all_preds would leave it list[ndarray] after concatenate.
+        preds: np.ndarray = np.concatenate(all_preds, axis=0)[:num_samples]
+        is_mean, is_std = self.compute_inception_score(preds)
 
         logger.info(f"Inception Score: {is_mean:.3f} ± {is_std:.3f}")
         return is_mean, is_std
