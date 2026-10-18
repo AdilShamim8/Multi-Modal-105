@@ -1,7 +1,7 @@
 import logging
 import random
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import cv2
 import decord
@@ -10,6 +10,8 @@ import pandas as pd
 import torch
 from decord import VideoReader, cpu
 from torch.utils.data import DataLoader, Dataset
+
+from multimodal.models.compression.video_vae import VideoAutoencoderKL
 
 logger = logging.getLogger(__name__)
 decord.bridge.set_bridge("torch")
@@ -110,9 +112,9 @@ class VideoLoader:
         new_W = int(round(W * scale))
 
         # Process each frame
-        processed = []
+        processed: list[torch.Tensor] = []
         for i in range(T):
-            frame = frames[i].numpy().astype(np.uint8)  # (H, W, C)
+            frame: np.ndarray = frames[i].numpy().astype(np.uint8)  # (H, W, C)
             frame = cv2.resize(frame, (new_W, new_H), interpolation=cv2.INTER_LANCZOS4)
 
             # Crop
@@ -347,7 +349,7 @@ class VideoTextDataset(Dataset):
     def __len__(self) -> int:
         return len(self.meta)
 
-    def __getitem__(self, idx: int) -> dict[str, torch.Tensor] | None:
+    def __getitem__(self, idx: int) -> dict[str, Any] | None:
         row = self.meta.iloc[idx]
         video_path = row["video_path"]
 
@@ -388,7 +390,7 @@ class VideoLatentCache:
 
     def __init__(
         self,
-        video_vae: torch.nn.Module,
+        video_vae: VideoAutoencoderKL,
         source_dataset: Dataset,
         cache_dir: str,
         device: str = "cuda",
@@ -430,14 +432,14 @@ class VideoLatentCache:
         for batch in tqdm(loader, desc="Encoding video latents"):
             videos = batch["video"].to(self.device)  # (B, C, T, H, W)
 
-            # Encode with VideoVAE
-            latents = self.video_vae.encode_to_latent(videos)  # (B, Cl, T', H', W')
-            latents = latents.cpu().numpy().astype(np.float16)
+            # Encode with VideoVAE (fresh variable: mypy binds latents as Tensor first)
+            batch_latents = self.video_vae.encode_to_latent(videos)  # (B, Cl, T', H', W')
+            latents_np: np.ndarray = batch_latents.cpu().numpy().astype(np.float16)
 
-            for i in range(latents.shape[0]):
+            for i in range(latents_np.shape[0]):
                 sample_dir = self.cache_dir / f"{global_idx:08d}"
                 sample_dir.mkdir(exist_ok=True)
-                np.save(sample_dir / "latent.npy", latents[i])
+                np.save(sample_dir / "latent.npy", latents_np[i])
 
                 # Save text data
                 meta = {
