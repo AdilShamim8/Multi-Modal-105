@@ -1,4 +1,5 @@
 import math
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -180,7 +181,10 @@ class SpatialTransformerBlock(nn.Module):
         h = self.proj_in(h)
         h = rearrange(h, "b c h w -> b (h w) c")
 
-        for self_attn, cross_attn, ff in self.layers:
+        # torch types ModuleList non-generically (Iterator[Module]); the cast
+        # documents that each element is a per-depth ModuleList so the unpack
+        # typechecks. Zero runtime cost.
+        for self_attn, cross_attn, ff in cast("list[nn.ModuleList]", self.layers):
             h = self_attn(h)
             h = cross_attn(h, context=context)
             h = ff(h)
@@ -421,7 +425,11 @@ class UNet2DConditionModel(nn.Module):
 
         # Down path: only ResBlock outputs (and downsample outputs) become
         # skips — attention blocks transform h in place without branching.
-        for block, downsample in zip(self.down_blocks, self.down_samples, strict=True):
+        for block, downsample in zip(
+            cast("list[nn.ModuleList]", self.down_blocks),
+            cast("list[nn.Module | None]", self.down_samples),
+            strict=True,
+        ):
             for layer in block:
                 if isinstance(layer, ResBlock):
                     h = layer(h, t_emb)
@@ -438,7 +446,11 @@ class UNet2DConditionModel(nn.Module):
         h = self.mid_block2(h, t_emb)
 
         # Up path
-        for block, upsample in zip(self.up_blocks, self.up_samples, strict=True):
+        for block, upsample in zip(
+            cast("list[nn.ModuleList]", self.up_blocks),
+            cast("list[nn.Module | None]", self.up_samples),
+            strict=True,
+        ):
             for layer in block:
                 if isinstance(layer, ResBlock):
                     skip = skips.pop()
