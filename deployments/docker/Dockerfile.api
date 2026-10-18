@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# API serving image (CPU-friendly; GPU optional for the sync path).
+# Build: docker build -f deployments/docker/Dockerfile.api -t multimodal/api:1.0.0 .
+# Last audited: 2026-10-18
+# ─────────────────────────────────────────────────────────────────────────────
+FROM multimodal/base:1.0.0
+
+USER root
+# Runtime deps only for the API plane (torch already in base).
+RUN pip install --no-cache-dir uvicorn[standard]
+
+USER mm
+EXPOSE 8000
+
+# Container-native healthcheck: readiness includes queue + store checks.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD curl -sf http://127.0.0.1:8000/healthz || exit 1
+
+# Managed by entrypoint: uvicorn workers, then exec for signal fidelity.
+COPY deployments/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
+CMD ["api"]
