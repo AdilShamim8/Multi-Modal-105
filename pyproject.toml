@@ -42,6 +42,7 @@ t2i = [
     "transformers>=4.35.0",
     "open-clip-torch>=2.23.0",
     "lpips>=0.1.4",
+    "scipy>=1.11.0",
 ]
 t2v = [
     "opencv-python>=4.8.0",
@@ -53,12 +54,18 @@ t2v = [
 ]
 serving = [
     "fastapi>=0.104.0",
+    "starlette>=0.27.0",
     "uvicorn[standard]>=0.24.0",
     "redis>=5.0.0",
     "prometheus-client>=0.19.0",
     "opentelemetry-api>=1.21.0",
     "opentelemetry-sdk>=1.21.0",
     "boto3>=1.28.0",
+]
+train = [
+    "accelerate>=0.26.0",
+    "wandb>=0.16.0",
+    "webdataset>=0.2.57",
 ]
 dev = [
     "ruff>=0.7.0",
@@ -73,8 +80,9 @@ test = [
     "pytest-cov>=4.1.0",
     "httpx>=0.25.0",
     "locust>=2.20.0",
+    "multimodal-agent[serving]",
 ]
-all = ["multimodal-agent[t2i,t2v,serving]"]
+all = ["multimodal-agent[t2i,t2v,serving,train]"]
 
 [project.urls]
 Homepage = "https://github.com/AdilShamim8/Multi-Modal-105"
