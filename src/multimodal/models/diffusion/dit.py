@@ -76,17 +76,16 @@ class AdaLNZero(nn.Module):
         super().__init__()
         self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         # 6 outputs: scale1, shift1, gate1, scale2, shift2, gate2
-        self.modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(cond_dim, 6 * hidden_size, bias=True),
-        )
-        # Zero-init for stable training
-        nn.init.zeros_(self.modulation[-1].weight)
-        nn.init.zeros_(self.modulation[-1].bias)
+        # Built as a local first so zero-init addresses the Linear directly
+        # (Sequential.__getitem__ is typed as Tensor | Module in the stubs).
+        modulation_linear = nn.Linear(cond_dim, 6 * hidden_size, bias=True)
+        nn.init.zeros_(modulation_linear.weight)
+        nn.init.zeros_(modulation_linear.bias)
+        self.modulation = nn.Sequential(nn.SiLU(), modulation_linear)
 
     def forward(
         self, x: torch.Tensor, c: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         mods = self.modulation(c)[:, None].chunk(6, dim=-1)
         shift1, scale1, gate1, shift2, scale2, gate2 = mods
         x_norm = self.norm(x) * (1 + scale1) + shift1
@@ -99,12 +98,10 @@ class AdaLNSingle(nn.Module):
     def __init__(self, hidden_size: int, cond_dim: int):
         super().__init__()
         self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(cond_dim, 2 * hidden_size, bias=True),
-        )
-        nn.init.zeros_(self.modulation[-1].weight)
-        nn.init.zeros_(self.modulation[-1].bias)
+        modulation_linear = nn.Linear(cond_dim, 2 * hidden_size, bias=True)
+        nn.init.zeros_(modulation_linear.weight)
+        nn.init.zeros_(modulation_linear.bias)
+        self.modulation = nn.Sequential(nn.SiLU(), modulation_linear)
 
     def forward(self, x: torch.Tensor, c: torch.Tensor):
         shift, scale = self.modulation(c)[:, None].chunk(2, dim=-1)
@@ -234,12 +231,10 @@ class FinalLayer(nn.Module):
     def __init__(self, hidden_size: int, patch_size: int, out_channels: int, cond_dim: int):
         super().__init__()
         self.norm = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(cond_dim, 2 * hidden_size, bias=True),
-        )
-        nn.init.zeros_(self.modulation[-1].weight)
-        nn.init.zeros_(self.modulation[-1].bias)
+        modulation_linear = nn.Linear(cond_dim, 2 * hidden_size, bias=True)
+        nn.init.zeros_(modulation_linear.weight)
+        nn.init.zeros_(modulation_linear.bias)
+        self.modulation = nn.Sequential(nn.SiLU(), modulation_linear)
         self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels)
         nn.init.zeros_(self.linear.weight)
         nn.init.zeros_(self.linear.bias)
@@ -313,6 +308,9 @@ class DiT(nn.Module):
 
         # ── Positional embedding (fixed sinusoidal) ─────────────────────────
         pos_embed = get_2d_sincos_pos_embed(hidden_size, input_size // patch_size)
+        # Declared for the type checker: register_buffer does not surface
+        # attributes statically (Module.__getattr__ is Tensor | Module).
+        self.pos_embed: torch.Tensor
         self.register_buffer(
             "pos_embed",
             torch.from_numpy(pos_embed).float().unsqueeze(0),
@@ -484,8 +482,8 @@ class EMAModel:
 
     def __init__(self, model: nn.Module, decay: float = 0.9999):
         self.decay = decay
-        self.shadow = {}
-        self.backup = {}
+        self.shadow: dict[str, torch.Tensor] = {}
+        self.backup: dict[str, torch.Tensor] = {}
         self._register(model)
 
     def _register(self, model: nn.Module):
