@@ -1,0 +1,46 @@
+# ConfigMap — non-secret runtime configuration for API and workers.
+# Secrets (API keys, S3 credentials) live in 06-secrets.example.yaml.
+# Values mirror .env.example / configs/serving/production.yaml.
+# Last audited: 2026-10-18
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multimodal-config
+  namespace: multimodal
+  labels:
+    app.kubernetes.io/name: multimodal
+data:
+  MM_ENV: "production"
+  MM_API_HOST: "0.0.0.0"
+  MM_API_PORT: "8000"
+  MM_API_WORKERS: "4"
+
+  MM_REDIS_URL: "redis://redis.multimodal.svc.cluster.local:6379/0"
+  MM_QUEUE_NAME: "mm:generation:jobs"
+  MM_QUEUE_MAX_DEPTH: "10000"
+  MM_JOB_TTL_S: "86400"
+  MM_JOB_RECOVERY_MAX_AGE_S: "600"
+
+  MM_MAX_STEPS: "100"
+  MM_MAX_BATCH_SIZE: "8"
+  MM_MAX_VIDEO_FRAMES: "64"
+  MM_SYNC_TIMEOUT_S: "30"
+
+  MM_MODEL_DIR: "/var/lib/multimodal/models"
+  MM_T2I_MODEL: "t2i-dit-s2"
+  MM_T2V_MODEL: "t2v-dit-b2"
+  MM_DEFAULT_SAMPLER: "dpm++"
+
+  MM_ARTIFACT_STORE: "s3"
+  MM_S3_BUCKET: "multimodal-artifacts"
+  MM_S3_REGION: "us-east-1"
+  MM_S3_PRESIGN_TTL_S: "3600"
+
+  MM_MODERATION_ENABLED: "true"
+  MM_MODERATION_MODE: "both"
+  MM_AUTH_ENABLED: "true"
+
+  MM_METRICS_ENABLED: "true"
+  MM_TRACING_ENABLED: "true"
+  MM_OTEL_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
+  MM_SERVICE_NAME: "multimodal-api"
