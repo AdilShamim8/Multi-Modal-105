@@ -1,9 +1,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # GPU worker image — queue consumer that executes generation jobs.
-# Build: docker build -f deployments/docker/Dockerfile.worker -t multimodal/worker:1.0.0 .
+# Build (local): docker build -f deployments/docker/Dockerfile.worker -t multimodal/worker:1.0.0 .
+# Build (CI):    --build-arg BASE_IMAGE=ghcr.io/<owner>/multimodal-base:<tag>
 # Last audited: 2026-10-18
 # ─────────────────────────────────────────────────────────────────────────────
-FROM multimodal/base:1.0.0
+ARG BASE_IMAGE=multimodal/base:1.0.0
+FROM ${BASE_IMAGE}
 
 # Weights mount point (populated by the model registry / preload job).
 # Artifacts are written to the shared store, never baked into the image.
