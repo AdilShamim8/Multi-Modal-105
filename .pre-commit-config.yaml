@@ -1,0 +1,46 @@
+# Pre-commit gates — run on every `git commit`; CI runs the same set.
+# Install once: `pre-commit install`   Update revs quarterly via Dependabot.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^docs/tutorial/
+      - id: end-of-file-fixer
+        exclude: ^docs/tutorial/
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^deployments/k8s/.*secrets.*
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: no-model-weights
+        name: block model binaries (>1MB) from entering git
+        entry: bash -c 'git diff --cached --name-only | grep -E "\.(pt|pth|ckpt|safetensors|onnx)$" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+      - id: syntax-gate
+        name: python syntax gate (compileall)
+        entry: python3 -m compileall -q
+        language: system
+        types: [python]
