@@ -1,6 +1,8 @@
 #  Complete Tutorial 5: Build a Multi-modal Generation Agent
 ## Complete Beginner Tutorial — Part 1 of 2
 
+> **Companion code:** this tutorial's implementations live in `src/multimodal/` (see the [repository map](../../README.md)). Last verified against the codebase: **2026-10-18**.
+
 ---
 
 # What We Are Building and Why
