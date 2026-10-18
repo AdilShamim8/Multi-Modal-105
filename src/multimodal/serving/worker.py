@@ -125,7 +125,7 @@ class GenerationWorker:
             output = self.engine.execute(job)
             keys = [
                 self.store.save(job.job_id, f"out-{i}", media, ext)
-                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions))
+                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions, strict=True))
             ]
             job.artifact_keys = keys
             job.seed = output.seed_used

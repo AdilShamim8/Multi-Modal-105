@@ -409,7 +409,7 @@ class UNet2DConditionModel(nn.Module):
 
         # Down path: only ResBlock outputs (and downsample outputs) become
         # skips — attention blocks transform h in place without branching.
-        for block, downsample in zip(self.down_blocks, self.down_samples):
+        for block, downsample in zip(self.down_blocks, self.down_samples, strict=True):
             for layer in block:
                 if isinstance(layer, ResBlock):
                     h = layer(h, t_emb)
@@ -426,7 +426,7 @@ class UNet2DConditionModel(nn.Module):
         h = self.mid_block2(h, t_emb)
 
         # Up path
-        for block, upsample in zip(self.up_blocks, self.up_samples):
+        for block, upsample in zip(self.up_blocks, self.up_samples, strict=True):
             for layer in block:
                 if isinstance(layer, ResBlock):
                     skip = skips.pop()

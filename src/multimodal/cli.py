@@ -211,7 +211,7 @@ def _generate(args: argparse.Namespace) -> int:
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions)):
+    for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions, strict=True)):
         path = out_dir / f"{job.job_id}-out-{i}.{ext}"
         path.write_bytes(media)
         print(f"wrote {path} ({len(media)} bytes, seed={output.seed_used})")

@@ -109,7 +109,7 @@ def _sync_generate(app, job: GenerationJob):  # noqa: ANN001, ANN202
             output: GenerationOutput = app.state.engine.execute(job)
             keys = [
                 app.state.store.save(job.job_id, f"out-{i}", media, ext)
-                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions))
+                for i, (media, ext) in enumerate(zip(output.artifacts, output.extensions, strict=True))
             ]
             job.artifact_keys = keys
             job.seed = output.seed_used
