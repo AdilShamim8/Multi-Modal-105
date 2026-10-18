@@ -1,0 +1,118 @@
+{
+  "title": "Multi-Modal Generation Platform — Overview",
+  "uid": "mm-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["multimodal", "generation"],
+  "templating": {
+    "list": [
+      {
+        "name": "modality",
+        "type": "query",
+        "query": "label_values(mm_generations_total, modality)",
+        "includeAll": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Generation throughput (jobs/s by status)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(mm_generations_total[$__rate_interval])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "id": 2,
+      "title": "Queue depth vs. processing",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "max(mm_queue_depth)", "legendFormat": "queued" },
+        { "expr": "max(mm_active_jobs)", "legendFormat": "running" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } }
+    },
+    {
+      "id": 3,
+      "title": "Generation latency (p50 / p95 / p99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(mm_generation_latency_seconds_bucket[$__rate_interval])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(mm_generation_latency_seconds_bucket[$__rate_interval])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(mm_generation_latency_seconds_bucket[$__rate_interval])) by (le))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 4,
+      "title": "API request rate by status class",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(mm_api_requests_total[$__rate_interval])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } }
+    },
+    {
+      "id": 5,
+      "title": "Latency budget burn (SLO: p95 < 60s over 30d)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "1 - (histogram_quantile(0.95, sum(rate(mm_generation_latency_seconds_bucket[30d])) by (le)) > bool 60)"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Moderation rejections (safety signal)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "targets": [
+        { "expr": "sum(rate(mm_api_requests_total{status=\"400\",route=\"/v1/generations\"}[$__rate_interval]))", "legendFormat": "rejected/s" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Worker fleet health",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "count(up{job=\"multimodal-worker\"} == 1)", "legendFormat": "healthy workers" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Model load time (cold starts)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 16 },
+      "targets": [
+        { "expr": "max(mm_model_load_seconds)", "legendFormat": "last load (s)" }
+      ]
+    }
+  ]
+}
