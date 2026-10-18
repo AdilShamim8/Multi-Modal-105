@@ -1,0 +1,46 @@
+# KEDA — queue-depth-driven autoscaling of the GPU worker tier.
+# The single most important autoscaling rule in the platform: GPU capacity
+# tracks DEMAND (queue length), not CPU utilization (workers are GPU-bound
+# and CPU-idle while denoising).
+# Last audited: 2026-10-18
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: multimodal-worker
+  namespace: multimodal
+spec:
+  scaleTargetRef:
+    name: multimodal-worker
+  pollingInterval: 15            # queue depth check cadence
+  cooldownPeriod: 300            # GPU nodes are slow to replace; no flapping
+  minReplicaCount: 2             # warm floor keeps p95 latency bounded
+  maxReplicaCount: 60            # fleet cap: cost circuit-breaker
+  fallback:                      # if Redis is unreachable, keep the floor
+    failureThreshold: 3
+    replicas: 2
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.multimodal.svc.cluster.local:6379
+        listName: mm:generation:jobs
+        listLength: "8"           # target backlog per worker (≈1 batch)
+        enableTLS: "false"
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus.observability.svc.cluster.local:9090
+        query: max(mm_queue_depth)   # belt-and-braces with the native trigger
+        threshold: "480"
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          policies:
+            - type: Percent
+              value: 50
+              periodSeconds: 60
+        scaleDown:
+          selectPolicy: Min
+          policies:
+            - type: Percent
+              value: 20
+              periodSeconds: 120
